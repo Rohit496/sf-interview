@@ -1,6 +1,6 @@
 /**
  * @description Controller for the My Accounts LWC component.
- *              Returns a clamped page of Account records alongside the total count. Deploy using MCP
+ *              Returns a clamped page of Account records alongside the total count. Deploy using MCP and GitHub PR.
  */
 public with sharing class AccountController {
     // ─── Inner Types ─────────────────────────────────────────────────────────────
