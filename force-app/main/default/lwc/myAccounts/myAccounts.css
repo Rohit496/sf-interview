@@ -1,0 +1,37 @@
+/* Blue card header — no SLDS utility provides this specific brand colour */
+.accounts-header {
+    background-color: #0176d3;
+    border-radius: 0.25rem 0.25rem 0 0;
+}
+
+/* Semantic rating colours — no SLDS utility equivalents */
+.rating-hot {
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.rating-warm {
+    color: #e65100;
+    font-weight: 600;
+}
+
+.rating-cold {
+    color: #1565c0;
+    font-weight: 600;
+}
+
+.rating-default {
+    color: #706e6b;
+}
+
+/* Footer accent — light-blue tinted box not covered by slds-theme_shade */
+.footer-pill {
+    background-color: #e8f4fd;
+    border-color: #c9e0f5;
+    border-radius: 8px;
+}
+
+.footer-text {
+    color: #0176d3;
+    font-weight: 500;
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Prevent_Invalid_Soft_Drink_Order</fullName>
+    <active>true</active>
+    <description>Prevents saving an order when the related Soft Drink has a Status of Expired, or when the ordered Quantity exceeds the Soft Drink Quantity Left.</description>
+    <errorConditionFormula>AND(
+    NOT(ISNEW()),
+    OR(
+        ISPICKVAL(Soft_Drink__r.Status__c, 'Expired'),
+        Quantity__c > Soft_Drink__r.Quantity_Left__c
+    )
+)</errorConditionFormula>
+    <errorMessage>This order cannot be saved. Either the selected Soft Drink is expired, or the quantity ordered exceeds the available stock.</errorMessage>
+</ValidationRule>

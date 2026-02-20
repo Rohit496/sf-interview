@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>MyAcct AccountController Execute</label>
+    <description>
+        Grants users the ability to execute the AccountController Apex class, which powers
+        the My Accounts LWC component. Must be combined with MyAcct_Account_Read to allow
+        the component to function correctly. Assign alongside MyAcct_Account_Read.
+    </description>
+    <license>Salesforce</license>
+    <classAccesses>
+        <apexClass>AccountController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>
