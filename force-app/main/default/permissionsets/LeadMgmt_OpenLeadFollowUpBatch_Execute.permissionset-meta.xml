@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>LeadMgmt OpenLeadFollowUpBatch Execute</label>
+    <description>Grants execute access to OpenLeadFollowUpBatch. Assigns follow-up Tasks to owners of Open Leads older than 60 days. Assign to Admins or automation users running lead hygiene jobs.</description>
+    <license>Salesforce</license>
+    <classAccesses>
+        <apexClass>OpenLeadFollowUpBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>
