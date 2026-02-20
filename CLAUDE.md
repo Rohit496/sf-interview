@@ -10,6 +10,38 @@ Salesforce DX project demonstrating Agentforce (Copilot) integrations, Einstein 
 - **Org type:** Developer Edition (production login URL)
 - **Source format:** SFDX source-tracking
 
+## MCP Servers
+
+Three MCP servers are configured for this project. Always prefer MCP tools over CLI commands or manual steps.
+
+### 1. Salesforce DX MCP (`mcp__Salesforce_DX__*`)
+
+Source: `https://github.com/salesforcecli/mcp`
+
+Handles all Salesforce org operations — deploy, retrieve, test, query, and LWC/Aura guidance.
+
+### 2. GitHub MCP (`mcp__github__*`)
+
+Handles GitHub repository operations — issues, pull requests, branches, file management, code search, and repository administration. Use for all GitHub interactions instead of the `gh` CLI where possible.
+
+Key tools:
+- `mcp__github__create_pull_request` — Open PRs
+- `mcp__github__get_pull_request` / `mcp__github__list_pull_requests` — Review PRs
+- `mcp__github__create_issue` / `mcp__github__get_issue` — Manage issues
+- `mcp__github__search_code` — Search codebase on GitHub
+- `mcp__github__push_files` / `mcp__github__create_or_update_file` — File operations
+
+### 3. Jira/Atlassian MCP (`mcp__mcp-atlassian__*`)
+
+Handles Jira project management — issues, sprints, worklogs, transitions, and board operations. Use for all Jira interactions.
+
+Key tools:
+- `mcp__mcp-atlassian__jira_create_issue` / `mcp__mcp-atlassian__jira_get_issue` — Issue management
+- `mcp__mcp-atlassian__jira_search` — JQL search
+- `mcp__mcp-atlassian__jira_transition_issue` — Move issues through workflow
+- `mcp__mcp-atlassian__jira_get_sprint_issues` / `mcp__mcp-atlassian__jira_get_sprints_from_board` — Sprint management
+- `mcp__mcp-atlassian__jira_add_comment` / `mcp__mcp-atlassian__jira_add_worklog` — Collaboration
+
 ## Commands
 
 ### Deployment (MCP-First)
@@ -211,6 +243,8 @@ You are a highly experienced and certified Salesforce Architect with 20+ years o
 
 - When calling the Salesforce CLI, always use `sf`, never use `sfdx` or the sfdx-style commands; they are deprecated.
 - Use `https://github.com/salesforcecli/mcp` MCP tools (if available) before Salesforce CLI commands.
+- Use `mcp__github__*` MCP tools for all GitHub operations before falling back to the `gh` CLI.
+- Use `mcp__mcp-atlassian__*` MCP tools for all Jira operations.
 - When creating new objects, classes and triggers, always create XML metadata files for objects (.object-meta.xml), classes (.cls-meta.xml) and triggers (.trigger-meta.xml).
 
 # Lightning Web Components (LWC) Requirements
