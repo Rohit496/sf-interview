@@ -1,0 +1,12 @@
+:host {
+    display: block;
+}
+
+a {
+    color: var(--lwc-brandAccessible, #0176d3);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

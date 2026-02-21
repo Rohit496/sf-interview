@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>ProductInterest__c</fullName>
-    <label>Product Interest</label>
+    <fullName>Health_Rating__c</fullName>
+    <label>Health Rating</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <type>Picklist</type>
@@ -9,19 +9,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>GC1000 series</fullName>
+                <fullName>Good</fullName>
                 <default>false</default>
-                <label>GC1000 series</label>
+                <label>Good</label>
             </value>
             <value>
-                <fullName>GC5000 series</fullName>
+                <fullName>Average</fullName>
                 <default>false</default>
-                <label>GC5000 series</label>
+                <label>Average</label>
             </value>
             <value>
-                <fullName>GC3000 series</fullName>
+                <fullName>At Risk</fullName>
                 <default>false</default>
-                <label>GC3000 series</label>
+                <label>At Risk</label>
             </value>
         </valueSetDefinition>
     </valueSet>

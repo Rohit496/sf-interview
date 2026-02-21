@@ -1,0 +1,41 @@
+<template>
+    <lightning-card title="Account Health" icon-name="standard:account">
+        <template lwc:if={isLoading}>
+            <div class="slds-p-around_large slds-align_absolute-center">
+                <lightning-spinner alternative-text="Loading health data" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <template lwc:if={hasError}>
+                <div class="slds-p-around_medium">
+                    <p class="slds-text-color_error">Unable to load health data.</p>
+                </div>
+            </template>
+
+            <template lwc:else>
+                <div class="slds-p-around_medium">
+                    <div class="slds-grid slds-grid_vertical slds-grid_vertical-align-start">
+                        <div class="slds-m-bottom_small">
+                            <span class="slds-text-title_caps slds-m-right_x-small">Health Rating</span>
+                            <template lwc:if={healthRating}>
+                                <lightning-badge
+                                    label={healthRating}
+                                    class={badgeClass}
+                                ></lightning-badge>
+                            </template>
+                            <template lwc:else>
+                                <span class="slds-text-color_weak">Not evaluated</span>
+                            </template>
+                        </div>
+
+                        <div>
+                            <span class="slds-text-title_caps slds-m-right_x-small">Last Evaluated</span>
+                            <span class="slds-text-body_regular">{formattedEvaluatedDate}</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

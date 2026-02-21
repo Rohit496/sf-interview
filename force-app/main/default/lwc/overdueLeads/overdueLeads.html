@@ -1,0 +1,67 @@
+<template>
+    <lightning-card title="Overdue Leads" icon-name="standard:lead">
+        <template lwc:if={isLoading}>
+            <div class="slds-p-around_medium">
+                <lightning-spinner alternative-text="Loading overdue leads" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:elseif={hasError}>
+            <div class="slds-p-around_medium slds-text-color_error">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="error"
+                    class="slds-m-right_x-small"></lightning-icon>
+                {errorMessage}
+            </div>
+        </template>
+
+        <template lwc:elseif={hasLeads}>
+            <div class="slds-p-around_small">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="Lead Name">Lead Name</div>
+                            </th>
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="Company">Company</div>
+                            </th>
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="Days Since Last Contact">Days Since Last Contact</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={leads} for:item="lead">
+                            <tr key={lead.Id}>
+                                <td data-label="Lead Name">
+                                    <div class="slds-truncate">
+                                        <a href={lead.recordUrl} onclick={handleNavigate}
+                                            data-id={lead.Id}>{lead.Name}</a>
+                                    </div>
+                                </td>
+                                <td data-label="Company">
+                                    <div class="slds-truncate" title={lead.Company}>{lead.Company}</div>
+                                </td>
+                                <td data-label="Days Since Last Contact">
+                                    <div class="slds-truncate">{lead.Days_Since_Last_Contact__c}</div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <div class="slds-p-around_medium slds-align_absolute-center">
+                <div class="slds-illustration slds-illustration_small">
+                    <div class="slds-text-longform">
+                        <p class="slds-text-body_regular slds-text-color_weak">
+                            No overdue leads found. You are all caught up.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>
