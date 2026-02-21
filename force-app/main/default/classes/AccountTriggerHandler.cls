@@ -6,22 +6,67 @@
  *              Each context method receives bulkified collections — never
  *              perform SOQL or DML inside loops.
  *
- *              Recursion is prevented via the static {@link hasRun} flag;
- *              reset it in tests when simulating re-entrant scenarios.
+ *              Recursion is prevented via separate static flags for before/after
+ *              contexts; reset them in tests when simulating re-entrant scenarios.
  *
  * @see AccountTrigger
  */
 public with sharing class AccountTriggerHandler {
 
-    // ─── Recursion Guard ─────────────────────────────────────────────────────
+    // ─── Health Rating Constants ────────────────────────────────────────────
+
+    /** @description Enum representing Account Health Rating picklist values. */
+    public enum HealthRating {
+        GOOD,
+        AVERAGE,
+        AT_RISK
+    }
+
+    /** @description Maps HealthRating enum values to their picklist API strings. */
+    private static final Map<HealthRating, String> HEALTH_RATING_LABELS = new Map<HealthRating, String>{
+        HealthRating.GOOD     => 'Good',
+        HealthRating.AVERAGE  => 'Average',
+        HealthRating.AT_RISK  => 'At Risk'
+    };
+
+    /** @description Revenue threshold for Good rating (exclusive). */
+    private static final Decimal REVENUE_HIGH_THRESHOLD = 10000000;
+    /** @description Revenue threshold for At Risk rating (exclusive). */
+    private static final Decimal REVENUE_LOW_THRESHOLD  = 1000000;
+    /** @description Employee threshold for Good rating (exclusive). */
+    private static final Integer EMPLOYEES_HIGH_THRESHOLD = 500;
+    /** @description Employee threshold for At Risk rating (exclusive). */
+    private static final Integer EMPLOYEES_LOW_THRESHOLD  = 100;
+
+    private static final String AT_RISK_TASK_SUBJECT_PREFIX = 'Review At Risk Account: ';
+    private static final Integer AT_RISK_TASK_DUE_DAYS = 3;
+
+    // ─── Recursion Guards ───────────────────────────────────────────────────
 
     /**
-     * @description Prevents recursive trigger execution within a single transaction.
-     *              Set to true after the first handler invocation; reset per test
-     *              using `AccountTriggerHandler.hasRun = false;` when needed.
+     * @description Prevents recursive before-trigger execution within a single transaction.
      */
     @TestVisible
-    private static Boolean hasRun = false;
+    private static Boolean hasRunBefore = false;
+
+    /**
+     * @description Prevents recursive after-trigger execution within a single transaction.
+     */
+    @TestVisible
+    private static Boolean hasRunAfter = false;
+
+    /**
+     * @description Legacy recursion guard kept for backward compatibility.
+     *              Maps to hasRunBefore for existing code that references it.
+     */
+    @TestVisible
+    private static Boolean hasRun {
+        get { return hasRunBefore && hasRunAfter; }
+        set {
+            hasRunBefore = value;
+            hasRunAfter = value;
+        }
+    }
 
     // ─── Context Dispatchers ─────────────────────────────────────────────────
 
@@ -32,13 +77,14 @@ public with sharing class AccountTriggerHandler {
      * @param newAccounts List of Account records being inserted (Trigger.new).
      */
     public void beforeInsert(List<Account> newAccounts) {
-        if (hasRun) {
+        if (hasRunBefore) {
             return;
         }
-        hasRun = true;
+        hasRunBefore = true;
 
         setAccountDefaults(newAccounts);
         validateAccounts(newAccounts, null);
+        evaluateHealthRating(newAccounts, null);
     }
 
     /**
@@ -49,12 +95,13 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap      Map of Account Id → old record state (Trigger.oldMap).
      */
     public void beforeUpdate(List<Account> newAccounts, Map<Id, Account> oldMap) {
-        if (hasRun) {
+        if (hasRunBefore) {
             return;
         }
-        hasRun = true;
+        hasRunBefore = true;
 
         validateAccounts(newAccounts, oldMap);
+        evaluateHealthRating(newAccounts, oldMap);
     }
 
     /**
@@ -64,10 +111,10 @@ public with sharing class AccountTriggerHandler {
      * @param newMap      Map of Account Id → new record (Trigger.newMap).
      */
     public void afterInsert(List<Account> newAccounts, Map<Id, Account> newMap) {
-        if (hasRun) {
+        if (hasRunAfter) {
             return;
         }
-        hasRun = true;
+        hasRunAfter = true;
 
         createRelatedRecords(newAccounts);
         enqueueAsyncWork(newMap.keySet());
@@ -82,12 +129,13 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap      Map of Account Id → old record state (Trigger.oldMap).
      */
     public void afterUpdate(List<Account> newAccounts, Map<Id, Account> newMap, Map<Id, Account> oldMap) {
-        if (hasRun) {
+        if (hasRunAfter) {
             return;
         }
-        hasRun = true;
+        hasRunAfter = true;
 
         syncRelatedRecords(newAccounts, oldMap);
+        createAtRiskTasks(newAccounts, oldMap);
         enqueueAsyncWork(newMap.keySet());
     }
 
@@ -145,6 +193,99 @@ public with sharing class AccountTriggerHandler {
         //           Database.insert(contacts, false, AccessLevel.USER_MODE);
         //       handleSaveResults(results, contacts);
         //   }
+    }
+
+    // ─── Health Rating Evaluation ──────────────────────────────────────────
+
+    /**
+     * @description Evaluates the Health_Rating__c field on Account records based on
+     *              AnnualRevenue and NumberOfEmployees thresholds. On insert, always
+     *              evaluates. On update, only evaluates when AnnualRevenue or
+     *              NumberOfEmployees has changed. Stamps Health_Evaluated_Date__c
+     *              with the current DateTime whenever the rating is set.
+     *
+     *              Rating rules:
+     *              - Good:    AnnualRevenue > $10M AND NumberOfEmployees > 500
+     *              - At Risk: AnnualRevenue < $1M AND NumberOfEmployees < 100
+     *              - Average: Everything else (default)
+     *
+     * @param newAccounts Accounts being inserted or updated (Trigger.new).
+     * @param oldMap      Previous field values; null during insert.
+     */
+    @TestVisible
+    private void evaluateHealthRating(List<Account> newAccounts, Map<Id, Account> oldMap) {
+        for (Account acc : newAccounts) {
+            // On update, only re-evaluate if relevant fields changed
+            if (oldMap != null) {
+                Account oldAcc = oldMap.get(acc.Id);
+                if (oldAcc != null
+                    && acc.AnnualRevenue == oldAcc.AnnualRevenue
+                    && acc.NumberOfEmployees == oldAcc.NumberOfEmployees) {
+                    continue;
+                }
+            }
+
+            Decimal revenue = acc.AnnualRevenue != null ? acc.AnnualRevenue : 0;
+            Integer employees = acc.NumberOfEmployees != null ? acc.NumberOfEmployees : 0;
+
+            if (revenue > REVENUE_HIGH_THRESHOLD && employees > EMPLOYEES_HIGH_THRESHOLD) {
+                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(HealthRating.GOOD);
+            } else if (revenue < REVENUE_LOW_THRESHOLD && employees < EMPLOYEES_LOW_THRESHOLD) {
+                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(HealthRating.AT_RISK);
+            } else {
+                // Average: covers all combinations not meeting Good or At Risk thresholds
+                // (e.g., high revenue with low employees, or mid-range values for both)
+                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(HealthRating.AVERAGE);
+            }
+
+            acc.Health_Evaluated_Date__c = DateTime.now();
+        }
+    }
+
+    // ─── At Risk Task Creation ──────────────────────────────────────────────
+
+    /**
+     * @description Creates a high-priority follow-up Task for each Account whose
+     *              Health_Rating__c changed to 'At Risk' during an update.
+     *              Uses Database.insert with allOrNone=false so partial failures
+     *              do not block the entire batch.
+     * @param newAccounts Updated Accounts (Trigger.new).
+     * @param oldMap      Previous field values (Trigger.oldMap).
+     */
+    @TestVisible
+    private void createAtRiskTasks(List<Account> newAccounts, Map<Id, Account> oldMap) {
+        List<Task> tasksToInsert = new List<Task>();
+        String atRiskLabel = HEALTH_RATING_LABELS.get(HealthRating.AT_RISK);
+
+        for (Account acc : newAccounts) {
+            Account oldAcc = oldMap.get(acc.Id);
+            if (oldAcc == null) {
+                continue;
+            }
+
+            // Only create task when rating changed TO 'At Risk' from something else
+            if (acc.Health_Rating__c == atRiskLabel
+                && oldAcc.Health_Rating__c != atRiskLabel) {
+
+                tasksToInsert.add(new Task(
+                    Subject     = AT_RISK_TASK_SUBJECT_PREFIX + acc.Name,
+                    ActivityDate = Date.today().addDays(AT_RISK_TASK_DUE_DAYS),
+                    OwnerId     = acc.OwnerId,
+                    WhatId      = acc.Id,
+                    Status      = 'Not Started',
+                    Priority    = 'High'
+                ));
+            }
+        }
+
+        if (tasksToInsert.isEmpty()) {
+            return;
+        }
+
+        List<Database.SaveResult> results = Database.insert(
+            tasksToInsert, false, AccessLevel.USER_MODE
+        );
+        handleSaveResults(results, tasksToInsert);
     }
 
     // ─── After-Update Helpers ────────────────────────────────────────────────

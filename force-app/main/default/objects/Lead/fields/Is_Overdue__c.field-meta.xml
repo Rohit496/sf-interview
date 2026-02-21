@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Overdue__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Indicates if the lead is overdue for follow-up (7+ days since last contact)</description>
+    <externalId>false</externalId>
+    <label>Is Overdue</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Checkbox</type>
+</CustomField>

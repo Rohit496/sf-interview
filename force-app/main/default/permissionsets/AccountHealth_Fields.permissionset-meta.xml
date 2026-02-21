@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>AccountHealth Fields</label>
+    <description>Grants read and edit access to the Account Health Indicator custom fields (Health_Rating__c, Health_Evaluated_Date__c). Assign to Account Managers or any user who needs to view or update account health evaluations.</description>
+    <license>Salesforce</license>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Account.Health_Rating__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Account.Health_Evaluated_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+</PermissionSet>
