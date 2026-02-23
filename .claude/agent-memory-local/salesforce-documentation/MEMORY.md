@@ -22,10 +22,11 @@
 - SOQL uses WITH USER_MODE
 
 ## Common Objects Documented
-- Account: AccountTriggerHandler (extended with Health Rating + At Risk Task features)
+- Account: AccountTriggerHandler (extended with Health Rating + At Risk Task + Duplicate Name Prevention features)
   - Fields: Health_Rating__c (Picklist), Health_Evaluated_Date__c (DateTime)
   - Permission Set: AccountHealth_Fields
   - LWC: accountHealthIndicator (wire-based badge card on record page)
+  - Duplicate prevention: preventDuplicateAccounts() -- single SOQL, case-insensitive, within-batch detection, excludeIds on update
 - Lead: LeadTriggerHandler (contact metrics: Days_Since_Last_Contact__c, Is_Overdue__c)
   - Fields: Last_Contacted_Date__c (Date), Days_Since_Last_Contact__c (Number), Is_Overdue__c (Checkbox)
   - Fields (admin only): Primary__c (Picklist), ProductInterest__c (Picklist)

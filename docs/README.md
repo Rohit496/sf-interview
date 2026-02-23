@@ -3,7 +3,7 @@
 **Project:** Salesforce DX -- Interview Project
 **API Version:** 65.0
 **Package Directory:** `force-app/main/default`
-**Last Updated:** 2026-02-21
+**Last Updated:** 2026-02-22
 
 ---
 
@@ -13,6 +13,7 @@
 |----------|---------|-----------------|------------|
 | [account-health-indicator.md](./account-health-indicator.md) | Account Health Indicator | Account, Task | 2 custom fields, 1 permission set, 1 trigger, 1 handler class, 1 test class, 1 LWC |
 | [lead-follow-up-tracking.md](./lead-follow-up-tracking.md) | Lead Follow-Up Tracking | Lead | 5 custom fields, 1 permission set, 1 trigger, 1 handler class, 2 Apex classes, 2 test classes, 1 LWC |
+| [duplicate-account-name-prevention.md](./duplicate-account-name-prevention.md) | Duplicate Account Name Prevention | Account | No new metadata; 1 handler class modified, 1 test class modified |
 
 ---
 
@@ -48,8 +49,8 @@
 
 | Class | Type | Feature |
 |-------|------|---------|
-| `AccountTriggerHandler` | Trigger Handler | Account Health Indicator |
-| `AccountTriggerHandlerTest` | Test Class | Account Health Indicator |
+| `AccountTriggerHandler` | Trigger Handler | Account Health Indicator, Duplicate Account Name Prevention |
+| `AccountTriggerHandlerTest` | Test Class | Account Health Indicator, Duplicate Account Name Prevention |
 | `LeadTriggerHandler` | Trigger Handler | Lead Follow-Up Tracking |
 | `LeadTriggerHandlerTest` | Test Class | Lead Follow-Up Tracking |
 | `OverdueLeadsController` | AuraEnabled Controller | Lead Follow-Up Tracking |
@@ -84,6 +85,16 @@ User/API                AccountTrigger                AccountTriggerHandler
   |-- view record page -----> accountHealthIndicator LWC
                               @wire getRecord
                               Renders colored badge + date
+
+
+DUPLICATE ACCOUNT NAME PREVENTION
+==================================
+
+User/API                AccountTrigger                AccountTriggerHandler
+  |                          |                                 |
+  |-- insert/update -------->|-- beforeInsert/beforeUpdate --->|-- preventDuplicateAccounts()
+                                                               |   Case-insensitive SOQL check
+                                                               |   addError() blocks duplicate
 
 
 LEAD FOLLOW-UP TRACKING
@@ -135,3 +146,5 @@ User/API                LeadTrigger                   LeadTriggerHandler
 2. **Calculated lead fields do not auto-refresh over time.** `Days_Since_Last_Contact__c` and `Is_Overdue__c` are only recalculated when `Last_Contacted_Date__c` changes. Records become stale as days pass. A scheduled batch or scheduled flow is needed to keep values current.
 
 3. **No LWC Jest tests.** Neither `accountHealthIndicator` nor `overdueLeads` have Jest unit tests. These should be added to the project's test suite.
+
+4. **Duplicate Account Name Prevention has a race condition risk.** The `preventDuplicateAccounts` check uses a before-trigger SOQL query, which cannot see uncommitted rows from concurrent transactions. Two simultaneous inserts with the same name can both pass the check and create a duplicate pair. A database-level Unique constraint is the only complete solution.
