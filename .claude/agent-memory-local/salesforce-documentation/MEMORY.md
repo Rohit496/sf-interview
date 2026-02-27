@@ -38,3 +38,10 @@
 ## Multi-Feature Projects
 - When a project has multiple features, create one doc per feature plus a docs/README.md index
 - README.md should include: full component inventory table, shared conventions table, architecture overview diagram, permission set assignment guide, and known project-wide limitations
+- After creating a new feature doc, ALWAYS update docs/README.md: add row to Feature Documents table, add rows to Apex Classes and LWC tables, update Last Updated date, and add any new Known Limitations
+
+## Modification-Only Tasks (no new files)
+- When a task modifies existing files rather than creating new ones, the doc structure should use "Components Modified" instead of "Components Created"
+- Always include a "Detailed Change Notes" section with before/after code snippets for each modified file
+- For LWC modifications, document which template sections were removed vs. kept
+- For test class changes, inventory every test method and note any broken/inconsistent assertions explicitly

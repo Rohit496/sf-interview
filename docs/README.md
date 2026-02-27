@@ -3,7 +3,7 @@
 **Project:** Salesforce DX -- Interview Project
 **API Version:** 65.0
 **Package Directory:** `force-app/main/default`
-**Last Updated:** 2026-02-21
+**Last Updated:** 2026-02-27
 
 ---
 
@@ -13,6 +13,7 @@
 |----------|---------|-----------------|------------|
 | [account-health-indicator.md](./account-health-indicator.md) | Account Health Indicator | Account, Task | 2 custom fields, 1 permission set, 1 trigger, 1 handler class, 1 test class, 1 LWC |
 | [lead-follow-up-tracking.md](./lead-follow-up-tracking.md) | Lead Follow-Up Tracking | Lead | 5 custom fields, 1 permission set, 1 trigger, 1 handler class, 2 Apex classes, 2 test classes, 1 LWC |
+| [2026-02-27-myaccounts-datatable-enhancement.md](./2026-02-27-myaccounts-datatable-enhancement.md) | myAccounts Datatable Enhancement | Account | 1 Apex controller modified, 1 test class modified, 1 LWC modified (4 files) |
 
 ---
 
@@ -54,6 +55,8 @@
 | `LeadTriggerHandlerTest` | Test Class | Lead Follow-Up Tracking |
 | `OverdueLeadsController` | AuraEnabled Controller | Lead Follow-Up Tracking |
 | `OverdueLeadsControllerTest` | Test Class | Lead Follow-Up Tracking |
+| `AccountController` | AuraEnabled Controller | myAccounts LWC (Datatable Enhancement) |
+| `AccountControllerTest` | Test Class | myAccounts LWC (Datatable Enhancement) |
 
 ### Lightning Web Components
 
@@ -61,6 +64,7 @@
 |-----------|--------------|-----------------|---------|
 | `accountHealthIndicator` | Account Health Indicator | Account Record Page | Account Health Indicator |
 | `overdueLeads` | Overdue Leads | Lead Record Page, App Page, Home Page | Lead Follow-Up Tracking |
+| `myAccounts` | My Accounts | App Page, Record Page, Home Page | myAccounts Datatable Enhancement |
 
 ---
 
@@ -134,4 +138,8 @@ User/API                LeadTrigger                   LeadTriggerHandler
 
 2. **Calculated lead fields do not auto-refresh over time.** `Days_Since_Last_Contact__c` and `Is_Overdue__c` are only recalculated when `Last_Contacted_Date__c` changes. Records become stale as days pass. A scheduled batch or scheduled flow is needed to keep values current.
 
-3. **No LWC Jest tests.** Neither `accountHealthIndicator` nor `overdueLeads` have Jest unit tests. These should be added to the project's test suite.
+3. **No LWC Jest tests for accountHealthIndicator / overdueLeads.** Neither `accountHealthIndicator` nor `overdueLeads` have Jest unit tests. These should be added to the project's test suite.
+
+4. **myAccounts Jest tests are partially broken.** Three of six existing Jest tests for `myAccounts` reference `.account-card`, `.rating-hot`, and `.rating-warm` CSS selectors that were removed in the datatable migration (2026-02-27). These tests fail until updated. See `docs/2026-02-27-myaccounts-datatable-enhancement.md` for the full list.
+
+5. **AccountControllerTest has inconsistent min-clamp assertions.** Two test methods (`testGetAccounts_clampedToMin`, `testGetAccounts_nullCountDefaultsToMin`) still assert a return count of `2` but the implementation now returns `50` for null/below-1 inputs. With 10 records seeded, the query returns 10 and the assertions fail. These should be corrected.
