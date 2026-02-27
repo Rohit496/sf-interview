@@ -47,11 +47,24 @@ private class AccountControllerTest {
 
     @IsTest
     static void testGetAccounts_clampedToMax() {
+        // Seed 41 additional accounts on top of the 10 from @TestSetup to reach 51 total,
+        // then request 100 — the new upper cap of 50 must be enforced.
+        List<Account> extras = new List<Account>();
+        for (Integer i = 10; i < 51; i++) {
+            extras.add(
+                new Account(
+                    Name = 'Extra Account ' + i,
+                    Industry = 'Technology'
+                )
+            );
+        }
+        Database.insert(extras, AccessLevel.USER_MODE);
+
         Test.startTest();
-        AccountController.AccountResult result = AccountController.getAccounts(10);
+        AccountController.AccountResult result = AccountController.getAccounts(100);
         Test.stopTest();
 
-        System.assertEquals(5, result.accounts.size(), 'Count above 5 should be clamped to 5');
+        System.assertEquals(50, result.accounts.size(), 'Count above 50 should be clamped to 50');
     }
 
     @IsTest
