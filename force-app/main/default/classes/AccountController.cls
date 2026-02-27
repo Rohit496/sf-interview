@@ -22,7 +22,7 @@ public with sharing class AccountController {
 
     /**
      * @description Returns a limited set of Account records and the overall total count.
-     *              The display count is clamped to the range [2, 5].
+     *              The display count is clamped to the range [2, 50].
      * @param displayCount Requested number of accounts to return.
      * @return AccountResult containing the clamped accounts list and total count.
      * @example
@@ -51,6 +51,6 @@ public with sharing class AccountController {
         if (value == null || value < 2) {
             return 2;
         }
-        return value > 5 ? 5 : value;
+        return value > 50 ? 50 : value;
     }
 }

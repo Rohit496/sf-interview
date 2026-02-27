@@ -18,9 +18,9 @@
             <property
                 name="displayCount"
                 type="Integer"
-                default="5"
+                default="50"
                 label="Accounts to Display"
-                description="Number of accounts shown on the card (2–5). Values outside this range are clamped by the server."
+                description="Number of accounts shown on the card (up to 50). Values outside this range are clamped by the server."
             />
         </targetConfig>
     </targetConfigs>

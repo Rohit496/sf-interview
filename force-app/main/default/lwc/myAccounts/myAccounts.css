@@ -4,26 +4,6 @@
     border-radius: 0.25rem 0.25rem 0 0;
 }
 
-/* Semantic rating colours — no SLDS utility equivalents */
-.rating-hot {
-    color: #2e7d32;
-    font-weight: 600;
-}
-
-.rating-warm {
-    color: #e65100;
-    font-weight: 600;
-}
-
-.rating-cold {
-    color: #1565c0;
-    font-weight: 600;
-}
-
-.rating-default {
-    color: #706e6b;
-}
-
 /* Footer accent — light-blue tinted box not covered by slds-theme_shade */
 .footer-pill {
     background-color: #e8f4fd;
