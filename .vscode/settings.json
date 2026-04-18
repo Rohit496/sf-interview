@@ -5,5 +5,12 @@
     "**/.sf": true,
     "**/.sfdx": true
   },
-  "xml.preferences.showSchemaDocumentationType": "none"
+  "xml.preferences.showSchemaDocumentationType": "none",
+  "salesforcedx-vscode-metadata.showSuccessNotification": true,
+
+  // --- Lightning Live Preview (salesforcedx-vscode-ui-preview) ---
+  // Log level for the preview extension output channel
+  "salesforcedx-vscode-ui-preview.logLevel": "info",
+  // Show the status bar item that displays local dev server state
+  "salesforcedx-vscode-ui-preview.showStatusBar": true
 }

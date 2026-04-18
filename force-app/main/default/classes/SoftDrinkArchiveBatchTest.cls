@@ -5,7 +5,6 @@
  */
 @IsTest
 private class SoftDrinkArchiveBatchTest {
-
     private static final String TAG_ARCHIVE = 'Archive';
     private static final String STATUS_ARCHIVE = 'Archive';
     private static final String STATUS_AVAILABLE = 'Available';
@@ -55,8 +54,11 @@ private class SoftDrinkArchiveBatchTest {
         ];
 
         for (Soft_Drink__c drink : archivedDrinks) {
-            Assert.areEqual(STATUS_ARCHIVE, drink.Status__c,
-                'Record "' + drink.Name + '" should have Status set to Archive');
+            Assert.areEqual(
+                STATUS_ARCHIVE,
+                drink.Status__c,
+                'Record "' + drink.Name + '" should have Status set to Archive'
+            );
         }
     }
 
@@ -73,19 +75,32 @@ private class SoftDrinkArchiveBatchTest {
             LIMIT 1
         ];
 
-        Assert.areEqual(STATUS_AVAILABLE, nonMatchingDrink.Status__c,
-            'Record without Archive tag should not be updated');
+        Assert.areEqual(
+            STATUS_AVAILABLE,
+            nonMatchingDrink.Status__c,
+            'Record without Archive tag should not be updated'
+        );
     }
 
     @IsTest
     static void handlesEmptyScope() {
-        delete [SELECT Id FROM Soft_Drink__c WHERE Tags__c = :TAG_ARCHIVE AND Status__c != :STATUS_ARCHIVE];
+        delete [
+            SELECT Id
+            FROM Soft_Drink__c
+            WHERE Tags__c = :TAG_ARCHIVE AND Status__c != :STATUS_ARCHIVE
+        ];
 
         Test.startTest();
         Database.executeBatch(new SoftDrinkArchiveBatch());
         Test.stopTest();
 
-        List<Soft_Drink__c> allDrinks = [SELECT Id, Status__c FROM Soft_Drink__c];
-        Assert.isFalse(allDrinks.isEmpty(), 'Non-matching records should still exist');
+        List<Soft_Drink__c> allDrinks = [
+            SELECT Id, Status__c
+            FROM Soft_Drink__c
+        ];
+        Assert.isFalse(
+            allDrinks.isEmpty(),
+            'Non-matching records should still exist'
+        );
     }
 }

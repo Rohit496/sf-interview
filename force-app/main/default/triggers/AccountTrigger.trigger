@@ -9,7 +9,7 @@
  *                - after insert
  *                - after update
  */
-trigger AccountTrigger on Account (
+trigger AccountTrigger on Account(
     before insert,
     before update,
     after insert,

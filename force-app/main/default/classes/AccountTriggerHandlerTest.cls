@@ -17,28 +17,31 @@
  */
 @IsTest
 private class AccountTriggerHandlerTest {
-
     // ─── Constants ───────────────────────────────────────────────────────────
 
-    private static final String RATING_GOOD     = 'Good';
-    private static final String RATING_AVERAGE  = 'Average';
-    private static final String RATING_AT_RISK  = 'At Risk';
+    private static final String RATING_GOOD = 'Good';
+    private static final String RATING_AVERAGE = 'Average';
+    private static final String RATING_AT_RISK = 'At Risk';
     private static final String AT_RISK_SUBJECT_PREFIX = 'Review At Risk Account: ';
 
     // Revenue / employee values that map cleanly to each tier
-    private static final Decimal REVENUE_GOOD    = 15000000; // > 10M
-    private static final Integer EMPLOYEES_GOOD  = 600;      // > 500
-    private static final Decimal REVENUE_RISK    = 500000;   // < 1M
-    private static final Integer EMPLOYEES_RISK  = 50;       // < 100
-    private static final Decimal REVENUE_AVG     = 5000000;  // between thresholds
-    private static final Integer EMPLOYEES_AVG   = 300;      // between thresholds
+    private static final Decimal REVENUE_GOOD = 15000000; // > 10M
+    private static final Integer EMPLOYEES_GOOD = 600; // > 500
+    private static final Decimal REVENUE_RISK = 500000; // < 1M
+    private static final Integer EMPLOYEES_RISK = 50; // < 100
+    private static final Decimal REVENUE_AVG = 5000000; // between thresholds
+    private static final Integer EMPLOYEES_AVG = 300; // between thresholds
 
     // ─── Helper: build an Account (not inserted) ─────────────────────────────
 
-    private static Account buildAccount(String name, Decimal revenue, Integer employees) {
+    private static Account buildAccount(
+        String name,
+        Decimal revenue,
+        Integer employees
+    ) {
         return new Account(
-            Name              = name,
-            AnnualRevenue     = revenue,
+            Name = name,
+            AnnualRevenue = revenue,
             NumberOfEmployees = employees
         );
     }
@@ -59,7 +62,7 @@ private class AccountTriggerHandlerTest {
 
     private static void resetGuards() {
         AccountTriggerHandler.hasRunBefore = false;
-        AccountTriggerHandler.hasRunAfter  = false;
+        AccountTriggerHandler.hasRunAfter = false;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -78,13 +81,21 @@ private class AccountTriggerHandlerTest {
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed for a Good-tier account');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed for a Good-tier account'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_GOOD, result.Health_Rating__c,
-            'Health_Rating__c should be Good when revenue > $10M and employees > 500');
-        Assert.isNotNull(result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should be stamped on insert');
+        Assert.areEqual(
+            RATING_GOOD,
+            result.Health_Rating__c,
+            'Health_Rating__c should be Good when revenue > $10M and employees > 500'
+        );
+        Assert.isNotNull(
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should be stamped on insert'
+        );
     }
 
     /**
@@ -93,19 +104,31 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void insert_atRiskThresholds_setsAtRiskRating() {
-        Account acc = buildAccount('At Risk Corp', REVENUE_RISK, EMPLOYEES_RISK);
+        Account acc = buildAccount(
+            'At Risk Corp',
+            REVENUE_RISK,
+            EMPLOYEES_RISK
+        );
 
         Test.startTest();
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed for an At-Risk-tier account');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed for an At-Risk-tier account'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AT_RISK, result.Health_Rating__c,
-            'Health_Rating__c should be At Risk when revenue < $1M and employees < 100');
-        Assert.isNotNull(result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should be stamped on insert');
+        Assert.areEqual(
+            RATING_AT_RISK,
+            result.Health_Rating__c,
+            'Health_Rating__c should be At Risk when revenue < $1M and employees < 100'
+        );
+        Assert.isNotNull(
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should be stamped on insert'
+        );
     }
 
     /**
@@ -120,13 +143,21 @@ private class AccountTriggerHandlerTest {
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed for an Average-tier account');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed for an Average-tier account'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AVERAGE, result.Health_Rating__c,
-            'Health_Rating__c should be Average for mid-range revenue and employees');
-        Assert.isNotNull(result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should be stamped on insert');
+        Assert.areEqual(
+            RATING_AVERAGE,
+            result.Health_Rating__c,
+            'Health_Rating__c should be Average for mid-range revenue and employees'
+        );
+        Assert.isNotNull(
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should be stamped on insert'
+        );
     }
 
     /**
@@ -135,7 +166,11 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void insert_highRevenueButLowEmployees_setsAverageRating() {
-        Account acc = buildAccount('Half Good Corp', REVENUE_GOOD, EMPLOYEES_RISK);
+        Account acc = buildAccount(
+            'Half Good Corp',
+            REVENUE_GOOD,
+            EMPLOYEES_RISK
+        );
 
         Test.startTest();
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
@@ -144,8 +179,11 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Insert should succeed');
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AVERAGE, result.Health_Rating__c,
-            'Health_Rating__c should be Average when only revenue meets the Good threshold');
+        Assert.areEqual(
+            RATING_AVERAGE,
+            result.Health_Rating__c,
+            'Health_Rating__c should be Average when only revenue meets the Good threshold'
+        );
     }
 
     /**
@@ -154,7 +192,11 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void insert_lowRevenueButHighEmployees_setsAverageRating() {
-        Account acc = buildAccount('Half Risk Corp', REVENUE_RISK, EMPLOYEES_GOOD);
+        Account acc = buildAccount(
+            'Half Risk Corp',
+            REVENUE_RISK,
+            EMPLOYEES_GOOD
+        );
 
         Test.startTest();
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
@@ -163,8 +205,11 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Insert should succeed');
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AVERAGE, result.Health_Rating__c,
-            'Health_Rating__c should be Average when only employees meets the At-Risk threshold');
+        Assert.areEqual(
+            RATING_AVERAGE,
+            result.Health_Rating__c,
+            'Health_Rating__c should be Average when only employees meets the At-Risk threshold'
+        );
     }
 
     /**
@@ -180,13 +225,21 @@ private class AccountTriggerHandlerTest {
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed when revenue and employees are null');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed when revenue and employees are null'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AT_RISK, result.Health_Rating__c,
-            'Null revenue and employees should be treated as 0, producing At Risk rating');
-        Assert.isNotNull(result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should be stamped even when inputs are null');
+        Assert.areEqual(
+            RATING_AT_RISK,
+            result.Health_Rating__c,
+            'Null revenue and employees should be treated as 0, producing At Risk rating'
+        );
+        Assert.isNotNull(
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should be stamped even when inputs are null'
+        );
     }
 
     /**
@@ -201,11 +254,17 @@ private class AccountTriggerHandlerTest {
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed when revenue is null');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed when revenue is null'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AVERAGE, result.Health_Rating__c,
-            'Null revenue treated as 0 (< $1M) with high employees should produce Average');
+        Assert.areEqual(
+            RATING_AVERAGE,
+            result.Health_Rating__c,
+            'Null revenue treated as 0 (< $1M) with high employees should produce Average'
+        );
     }
 
     /**
@@ -220,11 +279,17 @@ private class AccountTriggerHandlerTest {
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed when employees is null');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed when employees is null'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.areEqual(RATING_AVERAGE, result.Health_Rating__c,
-            'Null employees treated as 0 with high revenue should produce Average (not Good)');
+        Assert.areEqual(
+            RATING_AVERAGE,
+            result.Health_Rating__c,
+            'Null employees treated as 0 with high revenue should produce Average (not Good)'
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -256,10 +321,16 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         Account result = queryAccount(acc.Id);
-        Assert.areEqual(RATING_GOOD, result.Health_Rating__c,
-            'Health_Rating__c should remain unchanged when revenue and employees did not change');
-        Assert.areEqual(evaluatedAfterInsert, result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should not be re-stamped when relevant fields did not change');
+        Assert.areEqual(
+            RATING_GOOD,
+            result.Health_Rating__c,
+            'Health_Rating__c should remain unchanged when revenue and employees did not change'
+        );
+        Assert.areEqual(
+            evaluatedAfterInsert,
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should not be re-stamped when relevant fields did not change'
+        );
     }
 
     /**
@@ -268,7 +339,11 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void update_revenueChangesToGoodTier_setsGoodRating() {
-        Account acc = buildAccount('Improving Corp', REVENUE_AVG, EMPLOYEES_GOOD);
+        Account acc = buildAccount(
+            'Improving Corp',
+            REVENUE_AVG,
+            EMPLOYEES_GOOD
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
         resetGuards();
 
@@ -281,10 +356,15 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         Account result = queryAccount(acc.Id);
-        Assert.areEqual(RATING_GOOD, result.Health_Rating__c,
-            'Health_Rating__c should update to Good after revenue crosses the $10M threshold');
-        Assert.isNotNull(result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should be re-stamped after re-evaluation');
+        Assert.areEqual(
+            RATING_GOOD,
+            result.Health_Rating__c,
+            'Health_Rating__c should update to Good after revenue crosses the $10M threshold'
+        );
+        Assert.isNotNull(
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should be re-stamped after re-evaluation'
+        );
     }
 
     /**
@@ -293,7 +373,11 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void update_employeesChangesToAtRiskTier_setsAtRiskRating() {
-        Account acc = buildAccount('Shrinking Corp', REVENUE_RISK, EMPLOYEES_AVG);
+        Account acc = buildAccount(
+            'Shrinking Corp',
+            REVENUE_RISK,
+            EMPLOYEES_AVG
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
         resetGuards();
 
@@ -306,8 +390,11 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         Account result = queryAccount(acc.Id);
-        Assert.areEqual(RATING_AT_RISK, result.Health_Rating__c,
-            'Health_Rating__c should update to At Risk after employees drop below 100');
+        Assert.areEqual(
+            RATING_AT_RISK,
+            result.Health_Rating__c,
+            'Health_Rating__c should update to At Risk after employees drop below 100'
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -322,16 +409,23 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void update_ratingChangesToAtRisk_createsTask() {
         // Start with a Good account (insert sets Good automatically)
-        Account acc = buildAccount('At Risk Bound Corp', REVENUE_GOOD, EMPLOYEES_GOOD);
+        Account acc = buildAccount(
+            'At Risk Bound Corp',
+            REVENUE_GOOD,
+            EMPLOYEES_GOOD
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
 
         Account inserted = queryAccount(acc.Id);
-        Assert.areEqual(RATING_GOOD, inserted.Health_Rating__c,
-            'Precondition: account must start as Good before the transition');
+        Assert.areEqual(
+            RATING_GOOD,
+            inserted.Health_Rating__c,
+            'Precondition: account must start as Good before the transition'
+        );
         resetGuards();
 
         // Drive both revenue and employees below At-Risk thresholds on update
-        acc.AnnualRevenue     = REVENUE_RISK;
+        acc.AnnualRevenue = REVENUE_RISK;
         acc.NumberOfEmployees = EMPLOYEES_RISK;
 
         Test.startTest();
@@ -341,8 +435,11 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         Account updated = queryAccount(acc.Id);
-        Assert.areEqual(RATING_AT_RISK, updated.Health_Rating__c,
-            'Health_Rating__c should be At Risk after the update');
+        Assert.areEqual(
+            RATING_AT_RISK,
+            updated.Health_Rating__c,
+            'Health_Rating__c should be At Risk after the update'
+        );
 
         List<Task> tasks = [
             SELECT Id, Subject, ActivityDate, Status, Priority, OwnerId, WhatId
@@ -350,22 +447,39 @@ private class AccountTriggerHandlerTest {
             WHERE WhatId = :acc.Id
             WITH USER_MODE
         ];
-        Assert.areEqual(1, tasks.size(),
-            'Exactly one Task should be created when rating transitions to At Risk');
+        Assert.areEqual(
+            1,
+            tasks.size(),
+            'Exactly one Task should be created when rating transitions to At Risk'
+        );
 
         Task t = tasks[0];
-        Assert.areEqual(AT_RISK_SUBJECT_PREFIX + acc.Name, t.Subject,
-            'Task Subject should include the Account Name after the prefix');
-        Assert.areEqual(Date.today().addDays(3), t.ActivityDate,
-            'Task ActivityDate should be today + 3 days');
-        Assert.areEqual('Not Started', t.Status,
-            'Task Status should be Not Started');
-        Assert.areEqual('High', t.Priority,
-            'Task Priority should be High');
-        Assert.areEqual(updated.OwnerId, t.OwnerId,
-            'Task OwnerId should match the Account OwnerId');
-        Assert.areEqual(acc.Id, t.WhatId,
-            'Task WhatId should reference the Account');
+        Assert.areEqual(
+            AT_RISK_SUBJECT_PREFIX + acc.Name,
+            t.Subject,
+            'Task Subject should include the Account Name after the prefix'
+        );
+        Assert.areEqual(
+            Date.today().addDays(3),
+            t.ActivityDate,
+            'Task ActivityDate should be today + 3 days'
+        );
+        Assert.areEqual(
+            'Not Started',
+            t.Status,
+            'Task Status should be Not Started'
+        );
+        Assert.areEqual('High', t.Priority, 'Task Priority should be High');
+        Assert.areEqual(
+            updated.OwnerId,
+            t.OwnerId,
+            'Task OwnerId should match the Account OwnerId'
+        );
+        Assert.areEqual(
+            acc.Id,
+            t.WhatId,
+            'Task WhatId should reference the Account'
+        );
     }
 
     /**
@@ -375,12 +489,19 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void update_ratingStaysAtRisk_doesNotCreateDuplicateTask() {
         // Insert an At-Risk account directly
-        Account acc = buildAccount('Already At Risk Corp', REVENUE_RISK, EMPLOYEES_RISK);
+        Account acc = buildAccount(
+            'Already At Risk Corp',
+            REVENUE_RISK,
+            EMPLOYEES_RISK
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
 
         Account inserted = queryAccount(acc.Id);
-        Assert.areEqual(RATING_AT_RISK, inserted.Health_Rating__c,
-            'Precondition: account must start as At Risk');
+        Assert.areEqual(
+            RATING_AT_RISK,
+            inserted.Health_Rating__c,
+            'Precondition: account must start as At Risk'
+        );
         resetGuards();
 
         // Update a field that does not change the rating tier
@@ -393,10 +514,15 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         List<Task> tasks = [
-            SELECT Id FROM Task WHERE WhatId = :acc.Id WITH USER_MODE
+            SELECT Id
+            FROM Task
+            WHERE WhatId = :acc.Id
+            WITH USER_MODE
         ];
-        Assert.isTrue(tasks.isEmpty(),
-            'No Task should be created when Health_Rating__c stays At Risk (no transition)');
+        Assert.isTrue(
+            tasks.isEmpty(),
+            'No Task should be created when Health_Rating__c stays At Risk (no transition)'
+        );
     }
 
     /**
@@ -406,16 +532,23 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void update_ratingChangesAwayFromAtRisk_doesNotCreateTask() {
         // Insert as At-Risk
-        Account acc = buildAccount('Recovering Corp', REVENUE_RISK, EMPLOYEES_RISK);
+        Account acc = buildAccount(
+            'Recovering Corp',
+            REVENUE_RISK,
+            EMPLOYEES_RISK
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
 
         Account inserted = queryAccount(acc.Id);
-        Assert.areEqual(RATING_AT_RISK, inserted.Health_Rating__c,
-            'Precondition: account must start as At Risk');
+        Assert.areEqual(
+            RATING_AT_RISK,
+            inserted.Health_Rating__c,
+            'Precondition: account must start as At Risk'
+        );
         resetGuards();
 
         // Drive values above Good threshold — rating transitions to Good
-        acc.AnnualRevenue     = REVENUE_GOOD;
+        acc.AnnualRevenue = REVENUE_GOOD;
         acc.NumberOfEmployees = EMPLOYEES_GOOD;
 
         Test.startTest();
@@ -425,14 +558,22 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         Account updated = queryAccount(acc.Id);
-        Assert.areEqual(RATING_GOOD, updated.Health_Rating__c,
-            'Health_Rating__c should be Good after recovery');
+        Assert.areEqual(
+            RATING_GOOD,
+            updated.Health_Rating__c,
+            'Health_Rating__c should be Good after recovery'
+        );
 
         List<Task> tasks = [
-            SELECT Id FROM Task WHERE WhatId = :acc.Id WITH USER_MODE
+            SELECT Id
+            FROM Task
+            WHERE WhatId = :acc.Id
+            WITH USER_MODE
         ];
-        Assert.isTrue(tasks.isEmpty(),
-            'No Task should be created when rating transitions away from At Risk');
+        Assert.isTrue(
+            tasks.isEmpty(),
+            'No Task should be created when rating transitions away from At Risk'
+        );
     }
 
     /**
@@ -442,15 +583,22 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void update_ratingFromAverageToAtRisk_createsTask() {
         // Insert as Average
-        Account acc = buildAccount('Average Declining Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account acc = buildAccount(
+            'Average Declining Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
 
         Account inserted = queryAccount(acc.Id);
-        Assert.areEqual(RATING_AVERAGE, inserted.Health_Rating__c,
-            'Precondition: account must start as Average');
+        Assert.areEqual(
+            RATING_AVERAGE,
+            inserted.Health_Rating__c,
+            'Precondition: account must start as Average'
+        );
         resetGuards();
 
-        acc.AnnualRevenue     = REVENUE_RISK;
+        acc.AnnualRevenue = REVENUE_RISK;
         acc.NumberOfEmployees = EMPLOYEES_RISK;
 
         Test.startTest();
@@ -460,10 +608,16 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         List<Task> tasks = [
-            SELECT Id FROM Task WHERE WhatId = :acc.Id WITH USER_MODE
+            SELECT Id
+            FROM Task
+            WHERE WhatId = :acc.Id
+            WITH USER_MODE
         ];
-        Assert.areEqual(1, tasks.size(),
-            'One Task should be created when rating transitions from Average to At Risk');
+        Assert.areEqual(
+            1,
+            tasks.size(),
+            'One Task should be created when rating transitions from Average to At Risk'
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -478,19 +632,30 @@ private class AccountTriggerHandlerTest {
     static void insert_recursionGuardBeforeActive_skipsEvaluation() {
         AccountTriggerHandler.hasRunBefore = true;
 
-        Account acc = buildAccount('Skipped Corp', REVENUE_GOOD, EMPLOYEES_GOOD);
+        Account acc = buildAccount(
+            'Skipped Corp',
+            REVENUE_GOOD,
+            EMPLOYEES_GOOD
+        );
 
         Test.startTest();
         Database.SaveResult sr = Database.insert(acc, AccessLevel.SYSTEM_MODE);
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(), 'Insert should succeed even when before-guard is active');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert should succeed even when before-guard is active'
+        );
 
         Account result = queryAccount(sr.getId());
-        Assert.isNull(result.Health_Rating__c,
-            'Health_Rating__c should be null when before recursion guard is active');
-        Assert.isNull(result.Health_Evaluated_Date__c,
-            'Health_Evaluated_Date__c should be null when before recursion guard is active');
+        Assert.isNull(
+            result.Health_Rating__c,
+            'Health_Rating__c should be null when before recursion guard is active'
+        );
+        Assert.isNull(
+            result.Health_Evaluated_Date__c,
+            'Health_Evaluated_Date__c should be null when before recursion guard is active'
+        );
     }
 
     /**
@@ -500,14 +665,18 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void update_recursionGuardAfterActive_skipsTaskCreation() {
         // Insert a Good account without the guard
-        Account acc = buildAccount('After Guard Corp', REVENUE_GOOD, EMPLOYEES_GOOD);
+        Account acc = buildAccount(
+            'After Guard Corp',
+            REVENUE_GOOD,
+            EMPLOYEES_GOOD
+        );
         Database.insert(acc, AccessLevel.SYSTEM_MODE);
 
         // Set only the after guard; leave before guard clear so evaluateHealthRating fires
         AccountTriggerHandler.hasRunBefore = false;
-        AccountTriggerHandler.hasRunAfter  = true;
+        AccountTriggerHandler.hasRunAfter = true;
 
-        acc.AnnualRevenue     = REVENUE_RISK;
+        acc.AnnualRevenue = REVENUE_RISK;
         acc.NumberOfEmployees = EMPLOYEES_RISK;
 
         Test.startTest();
@@ -517,10 +686,15 @@ private class AccountTriggerHandlerTest {
         Assert.isTrue(sr.isSuccess(), 'Update should succeed');
 
         List<Task> tasks = [
-            SELECT Id FROM Task WHERE WhatId = :acc.Id WITH USER_MODE
+            SELECT Id
+            FROM Task
+            WHERE WhatId = :acc.Id
+            WITH USER_MODE
         ];
-        Assert.isTrue(tasks.isEmpty(),
-            'No Task should be created when the after recursion guard is already active');
+        Assert.isTrue(
+            tasks.isEmpty(),
+            'No Task should be created when the after recursion guard is already active'
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -537,8 +711,8 @@ private class AccountTriggerHandlerTest {
         List<Account> accounts = new List<Account>();
         // Distribution: 0-66 Good, 67-133 Average, 134-199 At Risk
         for (Integer i = 0; i < 200; i++) {
-            Decimal  rev;
-            Integer  emp;
+            Decimal rev;
+            Integer emp;
             if (i < 67) {
                 rev = REVENUE_GOOD;
                 emp = EMPLOYEES_GOOD;
@@ -553,7 +727,11 @@ private class AccountTriggerHandlerTest {
         }
 
         Test.startTest();
-        List<Database.SaveResult> results = Database.insert(accounts, true, AccessLevel.SYSTEM_MODE);
+        List<Database.SaveResult> results = Database.insert(
+            accounts,
+            true,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
         for (Database.SaveResult sr : results) {
@@ -561,19 +739,23 @@ private class AccountTriggerHandlerTest {
         }
 
         // Query back and validate rating distribution
-        Map<Id, Account> inserted = new Map<Id, Account>([
-            SELECT Id, Health_Rating__c, Health_Evaluated_Date__c
-            FROM Account
-            WHERE Id IN :new Map<Id, Account>(accounts).keySet()
-            WITH USER_MODE
-        ]);
+        Map<Id, Account> inserted = new Map<Id, Account>(
+            [
+                SELECT Id, Health_Rating__c, Health_Evaluated_Date__c
+                FROM Account
+                WHERE Id IN :new Map<Id, Account>(accounts).keySet()
+                WITH USER_MODE
+            ]
+        );
 
         Integer goodCount = 0;
-        Integer avgCount  = 0;
+        Integer avgCount = 0;
         Integer riskCount = 0;
         for (Account a : inserted.values()) {
-            Assert.isNotNull(a.Health_Evaluated_Date__c,
-                'Health_Evaluated_Date__c must be stamped on every inserted account');
+            Assert.isNotNull(
+                a.Health_Evaluated_Date__c,
+                'Health_Evaluated_Date__c must be stamped on every inserted account'
+            );
             if (a.Health_Rating__c == RATING_GOOD) {
                 goodCount++;
             } else if (a.Health_Rating__c == RATING_AVERAGE) {
@@ -583,9 +765,21 @@ private class AccountTriggerHandlerTest {
             }
         }
 
-        Assert.areEqual(67,  goodCount, 'Should be 67 Good accounts in bulk insert');
-        Assert.areEqual(67,  avgCount,  'Should be 67 Average accounts in bulk insert');
-        Assert.areEqual(66,  riskCount, 'Should be 66 At Risk accounts in bulk insert');
+        Assert.areEqual(
+            67,
+            goodCount,
+            'Should be 67 Good accounts in bulk insert'
+        );
+        Assert.areEqual(
+            67,
+            avgCount,
+            'Should be 67 Average accounts in bulk insert'
+        );
+        Assert.areEqual(
+            66,
+            riskCount,
+            'Should be 66 At Risk accounts in bulk insert'
+        );
     }
 
     /**
@@ -597,7 +791,13 @@ private class AccountTriggerHandlerTest {
         // Insert 200 Good accounts
         List<Account> accounts = new List<Account>();
         for (Integer i = 0; i < 200; i++) {
-            accounts.add(buildAccount('Bulk Update Corp ' + i, REVENUE_GOOD, EMPLOYEES_GOOD));
+            accounts.add(
+                buildAccount(
+                    'Bulk Update Corp ' + i,
+                    REVENUE_GOOD,
+                    EMPLOYEES_GOOD
+                )
+            );
         }
         Database.insert(accounts, true, AccessLevel.SYSTEM_MODE);
         resetGuards();
@@ -605,14 +805,18 @@ private class AccountTriggerHandlerTest {
         // Drive the first 100 to At Risk; leave the other 100 as Good
         for (Integer i = 0; i < 200; i++) {
             if (i < 100) {
-                accounts[i].AnnualRevenue     = REVENUE_RISK;
+                accounts[i].AnnualRevenue = REVENUE_RISK;
                 accounts[i].NumberOfEmployees = EMPLOYEES_RISK;
             }
             // i >= 100: no field change — handler skips re-evaluation
         }
 
         Test.startTest();
-        List<Database.SaveResult> results = Database.update(accounts, true, AccessLevel.SYSTEM_MODE);
+        List<Database.SaveResult> results = Database.update(
+            accounts,
+            true,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
         for (Database.SaveResult sr : results) {
@@ -622,13 +826,18 @@ private class AccountTriggerHandlerTest {
         // Verify exactly 100 At-Risk tasks were created
         Set<Id> accountIds = new Map<Id, Account>(accounts).keySet();
         List<Task> tasks = [
-            SELECT Id FROM Task
-            WHERE WhatId IN :accountIds
-            AND Subject LIKE :( AT_RISK_SUBJECT_PREFIX + '%' )
+            SELECT Id
+            FROM Task
+            WHERE
+                WhatId IN :accountIds
+                AND Subject LIKE :(AT_RISK_SUBJECT_PREFIX + '%')
             WITH USER_MODE
         ];
-        Assert.areEqual(100, tasks.size(),
-            'Exactly 100 Tasks should be created for the 100 accounts that transitioned to At Risk');
+        Assert.areEqual(
+            100,
+            tasks.size(),
+            'Exactly 100 Tasks should be created for the 100 accounts that transitioned to At Risk'
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -641,16 +850,28 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void insert_uniqueName_succeeds() {
-        Account acc = buildAccount('Unique Acme Inc', REVENUE_AVG, EMPLOYEES_AVG);
+        Account acc = buildAccount(
+            'Unique Acme Inc',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
 
         Test.startTest();
-        Database.SaveResult sr = Database.insert(acc, false, AccessLevel.SYSTEM_MODE);
+        Database.SaveResult sr = Database.insert(
+            acc,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(),
-            'Insert of a unique Account Name should succeed without errors');
-        Assert.isTrue(sr.getErrors().isEmpty(),
-            'No errors should be returned for a unique Account Name');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Insert of a unique Account Name should succeed without errors'
+        );
+        Assert.isTrue(
+            sr.getErrors().isEmpty(),
+            'No errors should be returned for a unique Account Name'
+        );
     }
 
     /**
@@ -660,23 +881,41 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void insert_duplicateNameSameCase_failsWithError() {
         // Pre-insert the existing account
-        Account existing = buildAccount('Duplicate Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account existing = buildAccount(
+            'Duplicate Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
         Database.insert(existing, AccessLevel.SYSTEM_MODE);
         resetGuards();
 
         // Attempt to insert another account with the identical name
-        Account duplicate = buildAccount('Duplicate Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account duplicate = buildAccount(
+            'Duplicate Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
 
         Test.startTest();
-        Database.SaveResult sr = Database.insert(duplicate, false, AccessLevel.SYSTEM_MODE);
+        Database.SaveResult sr = Database.insert(
+            duplicate,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
-        Assert.isFalse(sr.isSuccess(),
-            'Insert of a duplicate Account Name (same case) should fail');
-        Assert.isFalse(sr.getErrors().isEmpty(),
-            'At least one error should be returned for a duplicate Account Name');
+        Assert.isFalse(
+            sr.isSuccess(),
+            'Insert of a duplicate Account Name (same case) should fail'
+        );
+        Assert.isFalse(
+            sr.getErrors().isEmpty(),
+            'At least one error should be returned for a duplicate Account Name'
+        );
         Assert.isTrue(
-            sr.getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            sr.getErrors()[0]
+                .getMessage()
+                .contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
             'Error message should contain the expected duplicate-name error text'
         );
     }
@@ -689,21 +928,37 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void insert_duplicateNameDifferentCase_failsWithError() {
         // Pre-insert with mixed case
-        Account existing = buildAccount('Acme Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account existing = buildAccount(
+            'Acme Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
         Database.insert(existing, AccessLevel.SYSTEM_MODE);
         resetGuards();
 
         // Attempt with all-caps variant
-        Account duplicate = buildAccount('ACME CORP', REVENUE_AVG, EMPLOYEES_AVG);
+        Account duplicate = buildAccount(
+            'ACME CORP',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
 
         Test.startTest();
-        Database.SaveResult sr = Database.insert(duplicate, false, AccessLevel.SYSTEM_MODE);
+        Database.SaveResult sr = Database.insert(
+            duplicate,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
-        Assert.isFalse(sr.isSuccess(),
-            'Insert of a duplicate Account Name differing only in case should fail');
+        Assert.isFalse(
+            sr.isSuccess(),
+            'Insert of a duplicate Account Name differing only in case should fail'
+        );
         Assert.isTrue(
-            sr.getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            sr.getErrors()[0]
+                .getMessage()
+                .contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
             'Error message should match the duplicate-name error regardless of case difference'
         );
     }
@@ -719,22 +974,33 @@ private class AccountTriggerHandlerTest {
     @IsTest
     static void update_nameTakenByAnotherAccount_failsWithError() {
         // Insert two distinct accounts
-        Account first  = buildAccount('Alpha Corp', REVENUE_AVG, EMPLOYEES_AVG);
-        Account second = buildAccount('Beta Corp',  REVENUE_AVG, EMPLOYEES_AVG);
-        Database.insert(new List<Account>{ first, second }, AccessLevel.SYSTEM_MODE);
+        Account first = buildAccount('Alpha Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account second = buildAccount('Beta Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Database.insert(
+            new List<Account>{ first, second },
+            AccessLevel.SYSTEM_MODE
+        );
         resetGuards();
 
         // Attempt to rename second to match first
         second.Name = 'Alpha Corp';
 
         Test.startTest();
-        Database.SaveResult sr = Database.update(second, false, AccessLevel.SYSTEM_MODE);
+        Database.SaveResult sr = Database.update(
+            second,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
-        Assert.isFalse(sr.isSuccess(),
-            'Updating an Account to a name already owned by another Account should fail');
+        Assert.isFalse(
+            sr.isSuccess(),
+            'Updating an Account to a name already owned by another Account should fail'
+        );
         Assert.isTrue(
-            sr.getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            sr.getErrors()[0]
+                .getMessage()
+                .contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
             'Error message should contain the expected duplicate-name error when updating to a taken name'
         );
     }
@@ -755,13 +1021,21 @@ private class AccountTriggerHandlerTest {
         acc.AnnualRevenue = REVENUE_GOOD;
 
         Test.startTest();
-        Database.SaveResult sr = Database.update(acc, false, AccessLevel.SYSTEM_MODE);
+        Database.SaveResult sr = Database.update(
+            acc,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
-        Assert.isTrue(sr.isSuccess(),
-            'Updating an Account to its own current name should not trigger a duplicate error');
-        Assert.isTrue(sr.getErrors().isEmpty(),
-            'No errors should be returned when the name is unchanged on update');
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Updating an Account to its own current name should not trigger a duplicate error'
+        );
+        Assert.isTrue(
+            sr.getErrors().isEmpty(),
+            'No errors should be returned when the name is unchanged on update'
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -775,20 +1049,30 @@ private class AccountTriggerHandlerTest {
      */
     @IsTest
     static void insert_withinBatchDuplicateName_secondRecordFails() {
-        Account first  = buildAccount('Delta Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account first = buildAccount('Delta Corp', REVENUE_AVG, EMPLOYEES_AVG);
         Account second = buildAccount('Delta Corp', REVENUE_AVG, EMPLOYEES_AVG);
         List<Account> batch = new List<Account>{ first, second };
 
         Test.startTest();
-        List<Database.SaveResult> results = Database.insert(batch, false, AccessLevel.SYSTEM_MODE);
+        List<Database.SaveResult> results = Database.insert(
+            batch,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
-        Assert.isTrue(results[0].isSuccess(),
-            'The first Account in a batch should succeed when its name has not yet been seen');
-        Assert.isFalse(results[1].isSuccess(),
-            'The second Account in a batch should fail when its name duplicates the first');
         Assert.isTrue(
-            results[1].getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            results[0].isSuccess(),
+            'The first Account in a batch should succeed when its name has not yet been seen'
+        );
+        Assert.isFalse(
+            results[1].isSuccess(),
+            'The second Account in a batch should fail when its name duplicates the first'
+        );
+        Assert.isTrue(
+            results[1].getErrors()[0]
+                .getMessage()
+                .contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
             'The within-batch duplicate error message should match the expected constant'
         );
     }
@@ -806,11 +1090,21 @@ private class AccountTriggerHandlerTest {
     static void bulkInsert_200UniqueNames_allSucceed() {
         List<Account> accounts = new List<Account>();
         for (Integer i = 0; i < 200; i++) {
-            accounts.add(buildAccount('Unique Bulk Corp ' + i, REVENUE_AVG, EMPLOYEES_AVG));
+            accounts.add(
+                buildAccount(
+                    'Unique Bulk Corp ' + i,
+                    REVENUE_AVG,
+                    EMPLOYEES_AVG
+                )
+            );
         }
 
         Test.startTest();
-        List<Database.SaveResult> results = Database.insert(accounts, false, AccessLevel.SYSTEM_MODE);
+        List<Database.SaveResult> results = Database.insert(
+            accounts,
+            false,
+            AccessLevel.SYSTEM_MODE
+        );
         Test.stopTest();
 
         Integer successCount = 0;
@@ -820,7 +1114,536 @@ private class AccountTriggerHandlerTest {
             }
         }
 
-        Assert.areEqual(200, successCount,
-            'All 200 Accounts with unique names should insert successfully without duplicate errors');
+        Assert.areEqual(
+            200,
+            successCount,
+            'All 200 Accounts with unique names should insert successfully without duplicate errors'
+        );
+    }
+
+    // ═══ syncRelatedRecords — Billing Address → Contact Mailing Address ═══
+
+    /**
+     * @description When an Account's billing address changes, the related
+     *              Contact's mailing address must be synced to match all five
+     *              billing fields.
+     */
+    @IsTest
+    static void afterUpdate_billingAddressChanged_syncsContactMailingAddress() {
+        Account acc = buildAccount(
+            'Sync Single Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
+        acc.BillingStreet = '123 Main St';
+        acc.BillingCity = 'San Francisco';
+        acc.BillingPostalCode = '94105';
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+
+        Contact con = new Contact(
+            LastName = 'TestContact',
+            AccountId = acc.Id,
+            MailingStreet = '999 Old Rd',
+            MailingCity = 'Chicago',
+            MailingPostalCode = '60601'
+        );
+        Database.insert(con, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        acc.BillingStreet = '456 Oak Ave';
+        acc.BillingCity = 'Los Angeles';
+        acc.BillingPostalCode = '90001';
+
+        Test.startTest();
+        Database.SaveResult sr = Database.update(acc, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isTrue(sr.isSuccess(), 'Account update should succeed');
+
+        Contact result = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE Id = :con.Id
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        Assert.areEqual(
+            '456 Oak Ave',
+            result.MailingStreet,
+            'Contact MailingStreet should match new Account BillingStreet'
+        );
+        Assert.areEqual(
+            'Los Angeles',
+            result.MailingCity,
+            'Contact MailingCity should match new Account BillingCity'
+        );
+        Assert.areEqual(
+            '90001',
+            result.MailingPostalCode,
+            'Contact MailingPostalCode should match new Account BillingPostalCode'
+        );
+    }
+
+    /**
+     * @description When an Account's billing address changes and the Account has
+     *              multiple Contacts, all Contacts' mailing addresses must be synced.
+     */
+    @IsTest
+    static void afterUpdate_billingAddressChanged_syncsMultipleContacts() {
+        Account acc = buildAccount(
+            'Sync Multi Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
+        acc.BillingStreet = '10 First Ave';
+        acc.BillingCity = 'Denver';
+        acc.BillingPostalCode = '80201';
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+
+        List<Contact> contacts = new List<Contact>();
+        for (Integer i = 0; i < 3; i++) {
+            contacts.add(
+                new Contact(LastName = 'MultiCon ' + i, AccountId = acc.Id)
+            );
+        }
+        Database.insert(contacts, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        acc.BillingStreet = '20 Second Blvd';
+        acc.BillingCity = 'Austin';
+        acc.BillingPostalCode = '73301';
+
+        Test.startTest();
+        Database.update(acc, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        List<Contact> results = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE AccountId = :acc.Id
+            WITH USER_MODE
+        ];
+        Assert.areEqual(
+            3,
+            results.size(),
+            'All 3 Contacts should still exist after the update'
+        );
+
+        for (Contact c : results) {
+            Assert.areEqual(
+                '20 Second Blvd',
+                c.MailingStreet,
+                'Each Contact MailingStreet should match the new BillingStreet'
+            );
+            Assert.areEqual(
+                'Austin',
+                c.MailingCity,
+                'Each Contact MailingCity should match the new BillingCity'
+            );
+            Assert.areEqual(
+                '73301',
+                c.MailingPostalCode,
+                'Each Contact MailingPostalCode should match the new BillingPostalCode'
+            );
+        }
+    }
+
+    /**
+     * @description When an Account is updated but billing address is NOT changed,
+     *              the related Contact's mailing address must remain unchanged.
+     */
+    @IsTest
+    static void afterUpdate_billingAddressUnchanged_contactsNotUpdated() {
+        Account acc = buildAccount(
+            'No Billing Change Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
+        acc.BillingStreet = '100 Stable St';
+        acc.BillingCity = 'Portland';
+        acc.BillingPostalCode = '97201';
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+
+        Contact con = new Contact(
+            LastName = 'StableCon',
+            AccountId = acc.Id,
+            MailingStreet = '777 Own Rd',
+            MailingCity = 'Seattle',
+            MailingPostalCode = '98101'
+        );
+        Database.insert(con, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        // Update only Account Name — billing address is untouched
+        acc.Name = 'Renamed No Billing Change Corp';
+
+        Test.startTest();
+        Database.update(acc, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Contact result = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE Id = :con.Id
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        Assert.areEqual(
+            '777 Own Rd',
+            result.MailingStreet,
+            'Contact MailingStreet should remain unchanged when billing address did not change'
+        );
+        Assert.areEqual(
+            'Seattle',
+            result.MailingCity,
+            'Contact MailingCity should remain unchanged when billing address did not change'
+        );
+        Assert.areEqual(
+            '98101',
+            result.MailingPostalCode,
+            'Contact MailingPostalCode should remain unchanged when billing address did not change'
+        );
+    }
+
+    /**
+     * @description When an Account's billing address changes but the Account has
+     *              no Contacts, the update must succeed without errors.
+     */
+    @IsTest
+    static void afterUpdate_billingAddressChanged_noContacts_noError() {
+        Account acc = buildAccount(
+            'No Contacts Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
+        acc.BillingStreet = '1 Empty St';
+        acc.BillingCity = 'Phoenix';
+        acc.BillingPostalCode = '85001';
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        acc.BillingStreet = '2 New St';
+        acc.BillingCity = 'Tucson';
+        acc.BillingPostalCode = '85701';
+
+        Test.startTest();
+        Database.SaveResult sr = Database.update(acc, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isTrue(
+            sr.isSuccess(),
+            'Account update should succeed even when there are no related Contacts'
+        );
+    }
+
+    /**
+     * @description When only one billing field changes (BillingCity), the Contact's
+     *              mailing address must be fully synced to the current billing values.
+     */
+    @IsTest
+    static void afterUpdate_partialBillingChange_syncsContact() {
+        Account acc = buildAccount(
+            'Partial Change Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
+        acc.BillingStreet = '50 Half St';
+        acc.BillingCity = 'Boston';
+        acc.BillingPostalCode = '02101';
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+
+        Contact con = new Contact(
+            LastName = 'PartialCon',
+            AccountId = acc.Id,
+            MailingStreet = '999 Other St',
+            MailingCity = 'Hartford',
+            MailingPostalCode = '06101'
+        );
+        Database.insert(con, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        // Change ONLY BillingCity
+        acc.BillingCity = 'Cambridge';
+
+        Test.startTest();
+        Database.update(acc, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Contact result = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE Id = :con.Id
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        Assert.areEqual(
+            'Cambridge',
+            result.MailingCity,
+            'Contact MailingCity should match the updated BillingCity'
+        );
+        Assert.areEqual(
+            '50 Half St',
+            result.MailingStreet,
+            'Contact MailingStreet should match the current BillingStreet'
+        );
+        Assert.areEqual(
+            '02101',
+            result.MailingPostalCode,
+            'Contact MailingPostalCode should match the current BillingPostalCode'
+        );
+    }
+
+    /**
+     * @description When all five billing-address fields are cleared to null, the
+     *              related Contact's mailing-address fields must all become null.
+     */
+    @IsTest
+    static void afterUpdate_billingAddressCleared_syncsNulls() {
+        Account acc = buildAccount(
+            'Clear Address Corp',
+            REVENUE_AVG,
+            EMPLOYEES_AVG
+        );
+        acc.BillingStreet = '88 Full St';
+        acc.BillingCity = 'Miami';
+        acc.BillingPostalCode = '33101';
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+
+        Contact con = new Contact(
+            LastName = 'ClearCon',
+            AccountId = acc.Id,
+            MailingStreet = '88 Full St',
+            MailingCity = 'Miami',
+            MailingPostalCode = '33101'
+        );
+        Database.insert(con, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        acc.BillingStreet = null;
+        acc.BillingCity = null;
+        acc.BillingPostalCode = null;
+
+        Test.startTest();
+        Database.update(acc, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Contact result = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE Id = :con.Id
+            WITH USER_MODE
+            LIMIT 1
+        ];
+        Assert.isNull(
+            result.MailingStreet,
+            'Contact MailingStreet should be null after billing address is cleared'
+        );
+        Assert.isNull(
+            result.MailingCity,
+            'Contact MailingCity should be null after billing address is cleared'
+        );
+        Assert.isNull(
+            result.MailingPostalCode,
+            'Contact MailingPostalCode should be null after billing address is cleared'
+        );
+    }
+
+    /**
+     * @description Bulk update of 200 Accounts each with 2 Contacts must sync
+     *              all 400 Contact mailing addresses without hitting governor limits.
+     */
+    @IsTest
+    static void afterUpdate_bulkAccounts_syncsAllContacts() {
+        List<Account> accounts = new List<Account>();
+        for (Integer i = 0; i < 200; i++) {
+            Account acc = buildAccount(
+                'Bulk Addr Corp ' + i,
+                REVENUE_AVG,
+                EMPLOYEES_AVG
+            );
+            acc.BillingStreet = i + ' Old St';
+            acc.BillingCity = 'OldCity';
+            acc.BillingPostalCode = '10001';
+            accounts.add(acc);
+        }
+        Database.insert(accounts, true, AccessLevel.SYSTEM_MODE);
+
+        List<Contact> contacts = new List<Contact>();
+        for (Account acc : accounts) {
+            contacts.add(
+                new Contact(LastName = 'BulkCon A', AccountId = acc.Id)
+            );
+            contacts.add(
+                new Contact(LastName = 'BulkCon B', AccountId = acc.Id)
+            );
+        }
+        Database.insert(contacts, true, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        for (Account acc : accounts) {
+            acc.BillingStreet = '1 New Blvd';
+            acc.BillingCity = 'NewCity';
+            acc.BillingPostalCode = '07001';
+        }
+
+        Test.startTest();
+        Database.update(accounts, true, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Set<Id> accountIds = new Map<Id, Account>(accounts).keySet();
+        List<Contact> results = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE AccountId IN :accountIds
+            WITH USER_MODE
+        ];
+        Assert.areEqual(
+            400,
+            results.size(),
+            'All 400 Contacts should be returned after the bulk update'
+        );
+
+        for (Contact c : results) {
+            Assert.areEqual(
+                '1 New Blvd',
+                c.MailingStreet,
+                'Every Contact MailingStreet should match the new BillingStreet after bulk update'
+            );
+            Assert.areEqual(
+                'NewCity',
+                c.MailingCity,
+                'Every Contact MailingCity should match the new BillingCity after bulk update'
+            );
+            Assert.areEqual(
+                '07001',
+                c.MailingPostalCode,
+                'Every Contact MailingPostalCode should match the new BillingPostalCode after bulk update'
+            );
+        }
+    }
+
+    /**
+     * @description In a mixed batch of 5 Accounts, only the 3 whose billing
+     *              address changed should have their Contacts synced; the 2
+     *              unchanged Accounts' Contacts must retain their original addresses.
+     */
+    @IsTest
+    static void afterUpdate_mixedBatch_onlyChangedAccountsSynced() {
+        List<Account> accounts = new List<Account>();
+        for (Integer i = 0; i < 5; i++) {
+            Account acc = buildAccount(
+                'Mixed Corp ' + i,
+                REVENUE_AVG,
+                EMPLOYEES_AVG
+            );
+            acc.BillingStreet = i + ' Original St';
+            acc.BillingCity = 'OrigCity';
+            acc.BillingPostalCode = '44101';
+            accounts.add(acc);
+        }
+        Database.insert(accounts, true, AccessLevel.SYSTEM_MODE);
+
+        List<Contact> contacts = new List<Contact>();
+        for (Account acc : accounts) {
+            contacts.add(
+                new Contact(
+                    LastName = 'MixCon ' + acc.Name,
+                    AccountId = acc.Id,
+                    MailingStreet = 'Con Original St',
+                    MailingCity = 'ConCity',
+                    MailingPostalCode = '44101'
+                )
+            );
+        }
+        Database.insert(contacts, true, AccessLevel.SYSTEM_MODE);
+
+        resetGuards();
+
+        // Change billing on first 3 Accounts only
+        for (Integer i = 0; i < 3; i++) {
+            accounts[i].BillingStreet = '999 Updated Ave';
+            accounts[i].BillingCity = 'UpdatedCity';
+            accounts[i].BillingPostalCode = '90210';
+        }
+        // Accounts 3 & 4: touch a non-billing field so they appear in the DML batch
+        accounts[3].Name = 'Mixed Corp 3 Renamed';
+        accounts[4].Name = 'Mixed Corp 4 Renamed';
+
+        Test.startTest();
+        Database.update(accounts, true, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        // Verify changed Accounts' Contacts were synced
+        Set<Id> changedAccIds = new Set<Id>{
+            accounts[0].Id,
+            accounts[1].Id,
+            accounts[2].Id
+        };
+        List<Contact> changedContacts = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE AccountId IN :changedAccIds
+            WITH USER_MODE
+        ];
+        Assert.areEqual(
+            3,
+            changedContacts.size(),
+            'All 3 changed Accounts should each have 1 Contact'
+        );
+        for (Contact c : changedContacts) {
+            Assert.areEqual(
+                '999 Updated Ave',
+                c.MailingStreet,
+                'Changed Account Contact MailingStreet should be synced'
+            );
+            Assert.areEqual(
+                'UpdatedCity',
+                c.MailingCity,
+                'Changed Account Contact MailingCity should be synced'
+            );
+            Assert.areEqual(
+                '90210',
+                c.MailingPostalCode,
+                'Changed Account Contact MailingPostalCode should be synced'
+            );
+        }
+
+        // Verify unchanged Accounts' Contacts were NOT touched
+        Set<Id> unchangedAccIds = new Set<Id>{ accounts[3].Id, accounts[4].Id };
+        List<Contact> unchangedContacts = [
+            SELECT MailingStreet, MailingCity, MailingPostalCode
+            FROM Contact
+            WHERE AccountId IN :unchangedAccIds
+            WITH USER_MODE
+        ];
+        Assert.areEqual(
+            2,
+            unchangedContacts.size(),
+            'Both unchanged Accounts should each have 1 Contact'
+        );
+        for (Contact c : unchangedContacts) {
+            Assert.areEqual(
+                'Con Original St',
+                c.MailingStreet,
+                'Unchanged Account Contact MailingStreet should remain as originally set'
+            );
+            Assert.areEqual(
+                'ConCity',
+                c.MailingCity,
+                'Unchanged Account Contact MailingCity should remain as originally set'
+            );
+            Assert.areEqual(
+                '44101',
+                c.MailingPostalCode,
+                'Unchanged Account Contact MailingPostalCode should remain as originally set'
+            );
+        }
     }
 }

@@ -1,0 +1,23 @@
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #dddbda;
+}
+
+.pagination-label {
+    font-size: 0.8125rem;
+    color: #3e3e3c;
+}
+
+.page-size-combo {
+    width: 4.5rem;
+}
+
+.pagination-info {
+    font-size: 0.8125rem;
+    color: #3e3e3c;
+    margin-left: 0.5rem;
+}

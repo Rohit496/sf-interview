@@ -1,0 +1,7 @@
+{
+    "name": "interviewApp",
+    "dev": {
+        "command": "npm run dev",
+        "url": "http://localhost:5173"
+    }
+}

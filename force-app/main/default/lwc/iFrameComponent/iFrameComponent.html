@@ -1,0 +1,11 @@
+<template>
+    <template if:true={hasValidUrl}>
+        <div class="iframe-container" style={containerStyle}>
+            <iframe src={iframeUrl} style={iframeStyle}> </iframe>
+        </div>
+    </template>
+
+    <template if:false={hasValidUrl}>
+        <div class="slds-text-color_error">Invalid or missing iframe URL.</div>
+    </template>
+</template>

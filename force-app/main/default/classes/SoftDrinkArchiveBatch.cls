@@ -10,7 +10,6 @@
  * Database.executeBatch(new SoftDrinkArchiveBatch(), 100);
  */
 public with sharing class SoftDrinkArchiveBatch implements Database.Batchable<SObject> {
-
     private static final String TAG_ARCHIVE = 'Archive';
     private static final String STATUS_ARCHIVE = 'Archive';
 
@@ -24,8 +23,7 @@ public with sharing class SoftDrinkArchiveBatch implements Database.Batchable<SO
             [
                 SELECT Id, Status__c
                 FROM Soft_Drink__c
-                WHERE Tags__c = :TAG_ARCHIVE
-                AND Status__c != :STATUS_ARCHIVE
+                WHERE Tags__c = :TAG_ARCHIVE AND Status__c != :STATUS_ARCHIVE
                 WITH USER_MODE
             ]
         );
@@ -36,19 +34,31 @@ public with sharing class SoftDrinkArchiveBatch implements Database.Batchable<SO
      * @param batchContext The batch context provided by the platform.
      * @param scope List of Soft_Drink__c records to process.
      */
-    public void execute(Database.BatchableContext batchContext, List<Soft_Drink__c> scope) {
+    public void execute(
+        Database.BatchableContext batchContext,
+        List<Soft_Drink__c> scope
+    ) {
         for (Soft_Drink__c drink : scope) {
             drink.Status__c = STATUS_ARCHIVE;
         }
 
-        List<Database.SaveResult> results = Database.update(scope, false, AccessLevel.USER_MODE);
+        List<Database.SaveResult> results = Database.update(
+            scope,
+            false,
+            AccessLevel.USER_MODE
+        );
 
         for (Integer i = 0; i < results.size(); i++) {
             if (!results[i].isSuccess()) {
                 for (Database.Error err : results[i].getErrors()) {
-                    System.debug(LoggingLevel.ERROR,
-                        'Failed to archive Soft_Drink__c Id: ' + scope[i].Id +
-                        ' | Error: ' + err.getStatusCode() + ' - ' + err.getMessage()
+                    System.debug(
+                        LoggingLevel.ERROR,
+                        'Failed to archive Soft_Drink__c Id: ' +
+                            scope[i].Id +
+                            ' | Error: ' +
+                            err.getStatusCode() +
+                            ' - ' +
+                            err.getMessage()
                     );
                 }
             }
@@ -67,11 +77,15 @@ public with sharing class SoftDrinkArchiveBatch implements Database.Batchable<SO
             WITH USER_MODE
         ];
 
-        System.debug(LoggingLevel.INFO,
+        System.debug(
+            LoggingLevel.INFO,
             'SoftDrinkArchiveBatch completed. ' +
-            'Batches processed: ' + job.JobItemsProcessed +
-            ' | Errors: ' + job.NumberOfErrors +
-            ' | Total batches: ' + job.TotalJobItems
+                'Batches processed: ' +
+                job.JobItemsProcessed +
+                ' | Errors: ' +
+                job.NumberOfErrors +
+                ' | Total batches: ' +
+                job.TotalJobItems
         );
     }
 }

@@ -2,7 +2,11 @@
     <div class="slds-card">
         <!-- Header -->
         <div class="accounts-header slds-var-p-around_medium">
-            <h2 class="slds-text-heading_medium slds-text-color_inverse accounts-title">{title}</h2>
+            <h2
+                class="slds-text-heading_medium slds-text-color_inverse accounts-title"
+            >
+                {title}
+            </h2>
         </div>
 
         <!-- Loading spinner -->
@@ -26,7 +30,10 @@
         <template if:true={hasAccounts}>
             <div class="slds-var-p-around_small">
                 <template for:each={accounts} for:item="account">
-                    <div key={account.Id} class="slds-box slds-var-m-bottom_small account-card">
+                    <div
+                        key={account.Id}
+                        class="slds-box slds-var-m-bottom_small account-card"
+                    >
                         <div class="slds-media slds-media_center">
                             <!-- Avatar -->
                             <div class="slds-media__figure">
@@ -35,7 +42,8 @@
                                         class="slds-avatar__initials"
                                         title={account.Name}
                                         style={account.avatarStyle}
-                                    >{account.avatarLetter}</abbr>
+                                        >{account.avatarLetter}</abbr
+                                    >
                                 </span>
                             </div>
 
@@ -44,18 +52,26 @@
                                 <div class="slds-grid slds-grid_align-spread">
                                     <!-- Left: name / industry / phone -->
                                     <div class="slds-col">
-                                        <p class="slds-text-heading_small">{account.Name}</p>
-                                        <p class="slds-text-body_small slds-text-color_weak">
+                                        <p class="slds-text-heading_small">
+                                            {account.Name}
+                                        </p>
+                                        <p
+                                            class="slds-text-body_small slds-text-color_weak"
+                                        >
                                             Industry: {account.Industry}
                                         </p>
-                                        <p class="slds-text-body_small slds-text-color_weak">
+                                        <p
+                                            class="slds-text-body_small slds-text-color_weak"
+                                        >
                                             Phone: {account.Phone}
                                         </p>
                                     </div>
 
                                     <!-- Right: revenue / rating -->
                                     <div class="slds-col slds-text-align_right">
-                                        <p class="slds-text-body_small slds-text-color_weak">
+                                        <p
+                                            class="slds-text-body_small slds-text-color_weak"
+                                        >
                                             Annual Revenue
                                         </p>
                                         <p class="slds-text-heading_small">

@@ -7,10 +7,7 @@
  *                - before insert
  *                - before update
  */
-trigger LeadTrigger on Lead (
-    before insert,
-    before update
-) {
+trigger LeadTrigger on Lead(before insert, before update) {
     LeadTriggerHandler handler = new LeadTriggerHandler();
 
     if (Trigger.isBefore) {

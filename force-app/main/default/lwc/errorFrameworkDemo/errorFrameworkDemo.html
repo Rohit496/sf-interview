@@ -1,0 +1,78 @@
+<template>
+    <lightning-card title="Error Framework Live Demo">
+        <div class="slds-p-around_medium">
+            <!-- Button row -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col">
+                    <lightning-button
+                        label="Trigger Apex Error"
+                        variant="destructive"
+                        onclick={handleApexError}
+                    ></lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Trigger Network Error"
+                        variant="destructive"
+                        onclick={handleNetworkError}
+                    ></lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Trigger Validation Error"
+                        variant="destructive"
+                        onclick={handleValidationError}
+                    ></lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Trigger Unknown Error"
+                        variant="destructive"
+                        onclick={handleUnknownError}
+                    ></lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Clear"
+                        variant="neutral"
+                        onclick={handleClear}
+                    ></lightning-button>
+                </div>
+            </div>
+
+            <!-- Diagnostics section -->
+            <template lwc:if={hasError}>
+                <div class="slds-box slds-m-bottom_medium">
+                    <p><strong>Classified Type:</strong> {classifiedType}</p>
+                    <p>
+                        <strong>Normalized Message:</strong> {normalizedMessage}
+                    </p>
+                </div>
+            </template>
+
+            <!-- Inline Error Panel -->
+            <div class="slds-m-bottom_medium">
+                <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+                    Inline Error Panel:
+                </h3>
+                <c-error-panel errors={currentError}></c-error-panel>
+            </div>
+
+            <!-- Banner Error Panel -->
+            <div class="slds-m-bottom_medium">
+                <h3 class="slds-text-heading_small slds-m-bottom_x-small">
+                    Banner Error Panel:
+                </h3>
+                <c-error-panel
+                    errors={currentError}
+                    type="banner"
+                ></c-error-panel>
+            </div>
+
+            <!-- Log status line -->
+            <template lwc:if={logStatusText}>
+                <p class={logStatusClass}>{logStatusText}</p>
+            </template>
+        </div>
+    </lightning-card>
+</template>

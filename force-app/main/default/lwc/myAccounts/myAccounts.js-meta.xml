@@ -8,7 +8,9 @@
         <target>lightning__HomePage</target>
     </targets>
     <targetConfigs>
-        <targetConfig targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage">
+        <targetConfig
+            targets="lightning__AppPage,lightning__RecordPage,lightning__HomePage"
+        >
             <property
                 name="title"
                 type="String"

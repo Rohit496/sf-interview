@@ -1,0 +1,211 @@
+system:
+    instructions: |
+        You are a helpful Salesforce Service Agent specialising in case management.
+        Your primary job is to look up case details when a user provides a Case Number.
+        Always be professional, clear, and concise.
+        Never reveal internal Salesforce record IDs to the user.
+        If you cannot find a case, apologise and ask the user to verify the number.
+        Case Numbers in this org are 8-digit numbers (e.g. 00001234).
+
+    messages:
+        welcome: |
+            Hello! I'm your Case Management Assistant.
+            I can retrieve full case details for you -- just share the Case Number.
+            What Case Number would you like to look up?
+        error: "Sorry, something went wrong while processing your request. Please try again."
+
+config:
+    developer_name: "CaseLookupAgent"
+    default_agent_user: "rohitdotnet75.bb85a2297fcd@agentforce.com"
+    agent_label: "Case Lookup Agent"
+    description: "Agent that retrieves Salesforce Case details by Case Number"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+variables:
+    case_number: mutable string = ""
+        label: "Case Number"
+        description: "The 8-digit Salesforce Case Number to look up"
+    case_found: mutable boolean = False
+        description: "True if the case was found in the system"
+    case_subject: mutable string = ""
+        description: "The subject/title of the case"
+    case_status: mutable string = ""
+        description: "Current status of the case"
+    case_priority: mutable string = ""
+        description: "Priority level of the case"
+    case_owner: mutable string = ""
+        description: "Full name of the agent assigned to the case"
+    case_account: mutable string = ""
+        description: "Name of the account associated with the case"
+    case_created: mutable string = ""
+        description: "Date the case was originally created"
+    case_modified: mutable string = ""
+        description: "Date the case was last updated"
+    error_message: mutable string = ""
+        description: "Error details if the lookup failed"
+    lookup_attempts: mutable number = 0
+        description: "Number of lookup attempts made in the current session"
+
+knowledge:
+    citations_enabled: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+
+    description: "Welcome the user and determine the appropriate topic based on user input"
+
+    reasoning:
+        instructions: ->
+            | Select the best tool to call based on conversation history and user's intent.
+            | Welcome the user and ask for a Case Number.
+            | If the user provides a Case Number, transition to the case lookup topic.
+
+        actions:
+            go_to_case_lookup: @utils.transition to @topic.case_lookup
+
+topic case_lookup:
+    label: "Case Lookup"
+
+    description: "Looks up a Salesforce Case by Case Number and returns full details including subject, status, priority, owner, and description."
+
+    reasoning:
+        instructions: ->
+            | Help the user look up case details.
+            | Always run the get_case_details action first before responding about any case.
+            | If the user provides a Case Number, look it up immediately.
+            | After displaying case details, offer to look up another case or escalate.
+
+            if @variables.case_number == "":
+                | Case Number is not yet provided. Ask the user for the case number and set it using {!@actions.set_case_number}.
+            else:
+                | Case Number is available. Invoke {!@actions.get_case_details} to retrieve the case details and display them clearly.
+
+            if @variables.case_found == True:
+                | Display the case details in a clear, formatted manner:
+                | Subject, Status, Priority, Assigned To, Account, Created Date, and Last Updated.
+                | Do not reveal the Salesforce record ID.
+                | After displaying, ask if the user would like to look up another case.
+
+            if @variables.case_found == False and @variables.error_message != "" and @variables.lookup_attempts < 3:
+                | The case was not found. Inform the user and ask them to double-check the number. It should be 8 digits like 00001234.
+
+            if @variables.case_found == False and @variables.error_message != "" and @variables.lookup_attempts >= 3:
+                | Multiple attempts have failed. Transition to the escalation topic.
+                transition to @topic.escalation
+
+        actions:
+            get_case_details: @actions.CaseLookupAction
+                available when @variables.case_number != ""
+                with caseNumber = @variables.case_number
+                set @variables.case_found = @outputs.caseFound
+                set @variables.case_subject = @outputs.subject
+                set @variables.case_status = @outputs.status
+                set @variables.case_priority = @outputs.priority
+                set @variables.case_owner = @outputs.ownerName
+                set @variables.case_account = @outputs.accountName
+                set @variables.case_created = @outputs.createdDate
+                set @variables.case_modified = @outputs.lastModifiedDate
+                set @variables.error_message = @outputs.errorMessage
+
+            set_case_number: @utils.setVariables
+                description: "Set the case number as provided by the user."
+                with case_number = ...
+                with lookup_attempts = @variables.lookup_attempts + 1
+
+    actions:
+        CaseLookupAction:
+          description: "Retrieves full details of a Salesforce Case given a Case Number. Use this whenever the user asks about a specific case."
+          inputs:
+            caseNumber: string
+              description: "The 8-digit Salesforce Case Number to look up (e.g. 00001234)"
+              label: "caseNumber"
+              is_required: True
+              is_user_input: False
+              complex_data_type_name: "lightning__textType"
+          outputs:
+            caseFound: boolean
+              description: "True if the case was found in the system"
+              label: "caseFound"
+              complex_data_type_name: "lightning__booleanType"
+              filter_from_agent: False
+              is_displayable: False
+            subject: string
+              description: "The subject/title of the case"
+              label: "subject"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            status: string
+              description: "Current status of the case (e.g. New, In Progress, Closed)"
+              label: "status"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            priority: string
+              description: "Priority level: Low, Medium, or High"
+              label: "priority"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            ownerName: string
+              description: "Full name of the agent currently assigned to the case"
+              label: "ownerName"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            accountName: string
+              description: "Name of the account/customer associated with this case"
+              label: "accountName"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            createdDate: string
+              description: "Date the case was originally created"
+              label: "createdDate"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            lastModifiedDate: string
+              description: "Date the case was last updated"
+              label: "lastModifiedDate"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+            errorMessage: string
+              description: "Error details if the lookup failed"
+              label: "errorMessage"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: False
+          target: "apex://CaseLookupAction"
+          label: "Get Case Details"
+          require_user_confirmation: False
+          include_in_progress_indicator: False
+
+topic escalation:
+    label: "Escalation"
+
+    description: "Handles escalation when a case cannot be found or the user needs additional help"
+
+    reasoning:
+        instructions: ->
+            | The user needs additional assistance beyond what the Case Lookup Agent can provide.
+            | Sympathise with the situation and offer clear next steps:
+            | 1. Search in Salesforce - Navigate to the Cases tab and search manually.
+            | 2. Contact Support - Reach out to your Salesforce Admin for access issues.
+            | 3. Try a different number - If you have another Case Number, offer to try again.
+            | If the user wants to try another case number, reset variables and transition back to case_lookup.
+
+        actions:
+            go_to_case_lookup: @utils.transition to @topic.case_lookup
+
+            reset_and_retry: @utils.setVariables
+                description: "Reset variables to allow a fresh case lookup attempt."
+                with case_number = ""
+                with lookup_attempts = 0
+                with case_found = False
+                with error_message = ""

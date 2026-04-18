@@ -29,7 +29,8 @@ export default class OverdueLeads extends NavigationMixin(LightningElement) {
         } else if (error) {
             this.leads = [];
             this.errorMessage =
-                error?.body?.message || 'An unexpected error occurred while loading overdue leads.';
+                error?.body?.message ||
+                'An unexpected error occurred while loading overdue leads.';
         }
     }
 
@@ -47,7 +48,11 @@ export default class OverdueLeads extends NavigationMixin(LightningElement) {
      * @returns {boolean}
      */
     get hasNoLeads() {
-        return !this.isLoading && !this.errorMessage && (!this.leads || this.leads.length === 0);
+        return (
+            !this.isLoading &&
+            !this.errorMessage &&
+            (!this.leads || this.leads.length === 0)
+        );
     }
 
     /**

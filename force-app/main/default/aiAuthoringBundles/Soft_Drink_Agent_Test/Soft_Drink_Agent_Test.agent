@@ -1,0 +1,104 @@
+system:
+    instructions: "You are an AI Agent."
+
+    messages:
+        welcome: |
+            Hi, I'm an AI assistant. How can I help you?
+        error: "Sorry, it looks like something has gone wrong."
+
+config:
+    developer_name: "Soft_Drink_Agent_Test"
+    default_agent_user: "soft_drink_agent@00dg500000583h11093938543.ext"
+    agent_label: "Soft Drink Agent Test"
+    description: "New agent description"
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+    all_additional_locales: False
+
+variables:
+    EndUserId: linked string
+        source: @MessagingSession.MessagingEndUserId
+        description: "This variable may also be referred to as MessagingEndUser Id"
+    RoutableId: linked string
+        source: @MessagingSession.Id
+        description: "This variable may also be referred to as MessagingSession Id"
+    ContactId: linked string
+        source: @MessagingEndUser.ContactId
+        description: "This variable may also be referred to as MessagingEndUser ContactId"
+    EndUserLanguage: linked string
+        source: @MessagingSession.EndUserLanguage
+        description: "This variable may also be referred to as MessagingSession EndUserLanguage"
+    VerifiedCustomerId: mutable string
+        description: "This variable may also be referred to as VerifiedCustomerId"
+    Order_Number: mutable number = 0
+        label: "Order Number"
+        description: "The Order Number given by User"
+
+knowledge:
+    citations_enabled: False
+
+start_agent topic_selector:
+    label: "Topic Selector"
+
+    description: "Welcome the user and determine the appropriate topic based on user input"
+
+    reasoning:
+        instructions: ->
+            | Select the best tool to call based on conversation history and user's intent.
+
+        actions:
+            go_to_Soft_Drink_Order_Status: @utils.transition to @topic.Soft_Drink_Order_Status
+
+topic Soft_Drink_Order_Status:
+    label: "Soft Drink Order Status "
+
+    description: "This topic handles the retrieval of the status of a soft drink order based on the provided order number."
+
+    reasoning:
+        instructions: ->
+            | For finding the Order Status, Order number is required.
+
+            if @variables.Order_Number == 0:
+                | Order Number is not yet provided by the user. Ask the user for the order number, invoke the {!@actions.set_order_number} action, and set the order number variable.
+            else:
+                | Order Number is available and valid. To find the Order Status invoke this {!@actions.tool_Soft_Drink_Status} action.
+
+            | Display the output of the order status in bold style.
+
+        actions:
+            tool_Soft_Drink_Status: @actions.Soft_Drink_Status
+                available when @variables.Order_Number != 0
+                with var_OrderNumber = @variables.Order_Number
+
+            set_order_number: @utils.setVariables
+                description: "Set the order number as provided by the user."
+                with Order_Number = ...
+
+
+
+    actions:
+        Soft_Drink_Status:
+          description: "This is the action for retrieving the status of the order from the flow."
+          inputs:
+            var_OrderNumber: number
+              description: "The order number provided by the user."
+              label: "var_OrderNumber"
+              is_required: True
+              is_user_input: False
+              complex_data_type_name: "lightning__numberType"
+          outputs:
+            var_OrderStatus: string
+              description: "The status of the soft drinks order."
+              label: "var_OrderStatus"
+              complex_data_type_name: "lightning__textType"
+              filter_from_agent: False
+              is_displayable: True
+          target: "flow://Flow_Order_Status"
+          label: "Soft Drink Status"
+          require_user_confirmation: False
+          include_in_progress_indicator: False
+
+connection messaging:
+    adaptive_response_allowed: True
