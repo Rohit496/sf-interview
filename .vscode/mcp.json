@@ -1,5 +1,14 @@
 {
     "servers": {
+        "apex-log-mcp": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@certinia/apex-log-mcp",
+                "--allowed-orgs",
+                "DEFAULT_TARGET_ORG"
+            ]
+        },
         "Salesforce DX": {
             "command": "npx",
             "args": [

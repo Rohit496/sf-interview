@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>*</members>
@@ -31,6 +31,14 @@
     <types>
         <members>*</members>
         <name>StaticResource</name>
+    </types>
+    <types>
+        <members>Error_Framework_Test</members>
+        <name>CustomApplication</name>
+    </types>
+    <types>
+        <members>Demo</members>
+        <name>PermissionSet</name>
     </types>
     <version>65.0</version>
 </Package>

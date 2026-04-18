@@ -1,0 +1,53 @@
+<template>
+    <template if:true={hasErrors}>
+        <!-- Inline mode: SLDS illustration with error icon and message list -->
+        <template if:true={isInline}>
+            <div class="slds-illustration slds-illustration_small">
+                <div class="slds-text-color_error slds-m-bottom_x-small">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        alternative-text="Error"
+                        variant="error"
+                        size="small"
+                    ></lightning-icon>
+                    <span class="slds-text-heading_small slds-m-left_x-small">
+                        Something went wrong
+                    </span>
+                </div>
+                <ul class="slds-list_dotted slds-text-color_error">
+                    <template for:each={errorMessages} for:item="message">
+                        <li key={message}>{message}</li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        <!-- Banner mode: SLDS notify banner with role="alert" -->
+        <template if:true={isBanner}>
+            <div
+                class="slds-notify slds-notify_alert slds-alert_error"
+                role="alert"
+            >
+                <span class="slds-assistive-text">Error</span>
+                <span
+                    class="slds-icon_container slds-m-right_x-small"
+                    aria-hidden="true"
+                >
+                    <lightning-icon
+                        icon-name="utility:error"
+                        alternative-text="Error"
+                        variant="inverse"
+                        size="x-small"
+                    ></lightning-icon>
+                </span>
+                <h2>
+                    <template for:each={errorMessages} for:item="message">
+                        <span key={message} class="slds-m-right_small"
+                            >{message}</span
+                        >
+                    </template>
+                </h2>
+            </div>
+        </template>
+    </template>
+</template>

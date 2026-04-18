@@ -1,12 +1,21 @@
 {
-  "packageDirectories": [
-    {
-      "path": "force-app",
-      "default": true
+    "packageDirectories": [
+        {
+            "path": "force-app",
+            "default": true
+        }
+    ],
+    "name": "Interview",
+    "namespace": "",
+    "sfdcLoginUrl": "https://login.salesforce.com",
+    "sourceApiVersion": "65.0",
+    "plugins": {
+        "localDev": {
+            "enabled": true
+        },
+        "uiBundleDev": {
+            "enabled": true,
+            "proxyPort": 4545
+        }
     }
-  ],
-  "name": "Interview",
-  "namespace": "",
-  "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "65.0"
 }

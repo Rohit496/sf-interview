@@ -30,7 +30,10 @@ export default class AccountHealthIndicator extends LightningElement {
      * @returns {boolean}
      */
     get isLoading() {
-        return !this._wireResult || (!this._wireResult.data && !this._wireResult.error);
+        return (
+            !this._wireResult ||
+            (!this._wireResult.data && !this._wireResult.error)
+        );
     }
 
     /**
@@ -61,7 +64,10 @@ export default class AccountHealthIndicator extends LightningElement {
         if (!this._wireResult || !this._wireResult.data) {
             return '';
         }
-        const rawDate = getFieldValue(this._wireResult.data, HEALTH_EVALUATED_DATE_FIELD);
+        const rawDate = getFieldValue(
+            this._wireResult.data,
+            HEALTH_EVALUATED_DATE_FIELD
+        );
         if (!rawDate) {
             return 'Not yet evaluated';
         }

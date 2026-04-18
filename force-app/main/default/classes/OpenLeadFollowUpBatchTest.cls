@@ -9,16 +9,30 @@
  */
 @IsTest
 private class OpenLeadFollowUpBatchTest {
-
     private static final String TASK_SUBJECT = 'Close the Lead or mark it Bogus';
     private static final Integer TASK_DUE_DAYS = 2;
 
     @TestSetup
     static void makeData() {
         insert new List<Lead>{
-            new Lead(FirstName = 'John', LastName = 'StaleA', Company = 'Stale Corp', Status = 'Open - Not Contacted'),
-            new Lead(FirstName = 'Jane', LastName = 'StaleB', Company = 'Old Inc', Status = 'Working - Contacted'),
-            new Lead(FirstName = 'New', LastName = 'Recent', Company = 'Fresh LLC', Status = 'Open - Not Contacted')
+            new Lead(
+                FirstName = 'John',
+                LastName = 'StaleA',
+                Company = 'Stale Corp',
+                Status = 'Open - Not Contacted'
+            ),
+            new Lead(
+                FirstName = 'Jane',
+                LastName = 'StaleB',
+                Company = 'Old Inc',
+                Status = 'Working - Contacted'
+            ),
+            new Lead(
+                FirstName = 'New',
+                LastName = 'Recent',
+                Company = 'Fresh LLC',
+                Status = 'Open - Not Contacted'
+            )
         };
     }
 
@@ -26,7 +40,11 @@ private class OpenLeadFollowUpBatchTest {
 
     @IsTest
     static void executorCreatesOneTaskPerLead() {
-        List<Lead> leads = [SELECT Id, OwnerId FROM Lead WHERE IsConverted = false];
+        List<Lead> leads = [
+            SELECT Id, OwnerId
+            FROM Lead
+            WHERE IsConverted = FALSE
+        ];
 
         Test.startTest();
         new OpenLeadFollowUpBatch().execute(null, leads);
@@ -39,9 +57,17 @@ private class OpenLeadFollowUpBatchTest {
             WHERE WhoId IN :leadIds
         ];
 
-        Assert.areEqual(leads.size(), tasks.size(), 'Should create one task per lead');
+        Assert.areEqual(
+            leads.size(),
+            tasks.size(),
+            'Should create one task per lead'
+        );
         for (Task t : tasks) {
-            Assert.areEqual(TASK_SUBJECT, t.Subject, 'Task subject should match');
+            Assert.areEqual(
+                TASK_SUBJECT,
+                t.Subject,
+                'Task subject should match'
+            );
             Assert.areEqual(
                 Date.today().addDays(TASK_DUE_DAYS),
                 t.ActivityDate,
@@ -52,14 +78,23 @@ private class OpenLeadFollowUpBatchTest {
 
     @IsTest
     static void taskIsAssignedToLeadOwner() {
-        Lead lead = [SELECT Id, OwnerId FROM Lead WHERE LastName = 'StaleA' LIMIT 1];
+        Lead lead = [
+            SELECT Id, OwnerId
+            FROM Lead
+            WHERE LastName = 'StaleA'
+            LIMIT 1
+        ];
 
         Test.startTest();
         new OpenLeadFollowUpBatch().execute(null, new List<Lead>{ lead });
         Test.stopTest();
 
         Task t = [SELECT OwnerId FROM Task WHERE WhoId = :lead.Id LIMIT 1];
-        Assert.areEqual(lead.OwnerId, t.OwnerId, 'Task should be assigned to the Lead owner');
+        Assert.areEqual(
+            lead.OwnerId,
+            t.OwnerId,
+            'Task should be assigned to the Lead owner'
+        );
     }
 
     @IsTest
@@ -69,7 +104,10 @@ private class OpenLeadFollowUpBatchTest {
         Test.stopTest();
 
         List<Task> tasks = [SELECT Id FROM Task WHERE Subject = :TASK_SUBJECT];
-        Assert.isTrue(tasks.isEmpty(), 'No tasks should be created for an empty scope');
+        Assert.isTrue(
+            tasks.isEmpty(),
+            'No tasks should be created for an empty scope'
+        );
     }
 
     // ─── start() and finish() Tests ───────────────────────────────────────────
@@ -91,7 +129,10 @@ private class OpenLeadFollowUpBatchTest {
         Test.stopTest();
 
         List<Task> tasks = [SELECT Id FROM Task WHERE Subject = :TASK_SUBJECT];
-        Assert.isTrue(tasks.isEmpty(), 'No tasks should be created when no Leads exceed the 60-day threshold');
+        Assert.isTrue(
+            tasks.isEmpty(),
+            'No tasks should be created when no Leads exceed the 60-day threshold'
+        );
     }
 
     // ─── Constructor Tests ────────────────────────────────────────────────────
@@ -110,6 +151,10 @@ private class OpenLeadFollowUpBatchTest {
     static void customConstructorPreservesThresholdDate() {
         Date customDate = Date.today().addDays(-30);
         OpenLeadFollowUpBatch batchJob = new OpenLeadFollowUpBatch(customDate);
-        Assert.areEqual(customDate, batchJob.queryThresholdDate, 'Custom threshold date should be preserved');
+        Assert.areEqual(
+            customDate,
+            batchJob.queryThresholdDate,
+            'Custom threshold date should be preserved'
+        );
     }
 }

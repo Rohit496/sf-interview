@@ -136,15 +136,15 @@ USER REQUEST
 
 ### Available Agents
 
-| Step | Agent | Color | When to Invoke |
-|------|-------|-------|----------------|
-| 1 | `salesforce-design` | 🟠 Orange | **ALWAYS FIRST** for any Salesforce request |
-| 2 | `salesforce-admin` | 🔵 Blue | When Design Agent identifies admin/declarative work |
-| 3 | `salesforce-developer` | 🟢 Green | When Design Agent identifies development work |
-| 4 | `salesforce-unit-testing` | 🟡 Yellow | After Developer creates any Apex code |
-| 5 | `salesforce-code-review` | 🟣 Purple | After Unit Testing, BEFORE deployment |
-| 6 | `salesforce-devops` | 🔴 Red | After Code Review passes (parallel with docs) |
-| 7 | `salesforce-documentation` | 🔷 Cyan | After Code Review passes (parallel with devops) |
+| Step | Agent                      | Color     | When to Invoke                                      |
+| ---- | -------------------------- | --------- | --------------------------------------------------- |
+| 1    | `salesforce-design`        | 🟠 Orange | **ALWAYS FIRST** for any Salesforce request         |
+| 2    | `salesforce-admin`         | 🔵 Blue   | When Design Agent identifies admin/declarative work |
+| 3    | `salesforce-developer`     | 🟢 Green  | When Design Agent identifies development work       |
+| 4    | `salesforce-unit-testing`  | 🟡 Yellow | After Developer creates any Apex code               |
+| 5    | `salesforce-code-review`   | 🟣 Purple | After Unit Testing, BEFORE deployment               |
+| 6    | `salesforce-devops`        | 🔴 Red    | After Code Review passes (parallel with docs)       |
+| 7    | `salesforce-documentation` | 🔷 Cyan   | After Code Review passes (parallel with devops)     |
 
 ---
 
@@ -190,6 +190,7 @@ Code review passed. Now executing deployment and documentation in parallel:
 ```
 
 Both agents run simultaneously:
+
 - **DevOps** → Deploys to org (with user confirmation)
 - **Documentation** → Creates docs (saves to docs/ folder)
 
@@ -208,14 +209,14 @@ IF verdict = "CHANGES REQUIRED":
         [F] Fix issues (send back to developer)
         [S] Skip and deploy anyway (not recommended)
         [C] Cancel deployment"
-    
+
     IF user says "F" or "Fix":
         → Use salesforce-developer subagent to fix: [list of issues]
         → After fix, re-run salesforce-code-review
-    
+
     IF user says "S" or "Skip":
         → Proceed to deployment with warning
-    
+
     IF user says "C" or "Cancel":
         → Stop workflow, do not deploy
 ```
@@ -265,12 +266,12 @@ User asks something about Salesforce
 
 ### What Triggers Each Agent
 
-| If user mentions... | Agents Involved |
-|---------------------|-----------------|
-| Custom Object, Field, Validation Rule | design → admin → devops + docs |
-| Apex, Trigger, Class | design → admin → developer → unit-testing → code-review → devops + docs |
-| LWC, Lightning Component | design → developer → code-review → devops + docs |
-| Mixed (object + trigger) | design → admin → developer → unit-testing → code-review → devops + docs |
+| If user mentions...                   | Agents Involved                                                         |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| Custom Object, Field, Validation Rule | design → admin → devops + docs                                          |
+| Apex, Trigger, Class                  | design → admin → developer → unit-testing → code-review → devops + docs |
+| LWC, Lightning Component              | design → developer → code-review → devops + docs                        |
+| Mixed (object + trigger)              | design → admin → developer → unit-testing → code-review → devops + docs |
 
 ---
 
@@ -311,14 +312,14 @@ Use the salesforce-documentation subagent to create documentation
 
 ### Skip Rules (Only When User Explicitly Requests)
 
-| User says explicitly... | Action |
-|------------------------|--------|
-| "skip design" | Skip Design Agent |
-| "skip tests" | Skip unit-testing agent |
-| "skip review" | Skip code-review agent |
-| "don't deploy" or "no deployment" | Skip devops agent |
+| User says explicitly...           | Action                   |
+| --------------------------------- | ------------------------ |
+| "skip design"                     | Skip Design Agent        |
+| "skip tests"                      | Skip unit-testing agent  |
+| "skip review"                     | Skip code-review agent   |
+| "don't deploy" or "no deployment" | Skip devops agent        |
 | "no docs" or "skip documentation" | Skip documentation agent |
-| "just analyze" | Only invoke Design Agent |
+| "just analyze"                    | Only invoke Design Agent |
 
 **If user does NOT explicitly say to skip → ALWAYS follow full workflow**
 
@@ -327,16 +328,19 @@ Use the salesforce-documentation subagent to create documentation
 ## Transparency & Confirmation Gates
 
 ### Gate 1: Design Confirmation
+
 - Location: After Design Agent completes
 - File: `agent-output/design-requirements.md`
 - Ask: "Do you want to proceed with this plan? (yes/no/changes)"
 
 ### Gate 2: Code Review
+
 - Location: After Code Review Agent completes
 - Verdicts: APPROVED, APPROVED WITH WARNINGS, CHANGES REQUIRED
 - If changes required, offer to fix via developer agent
 
 ### Gate 3: Deployment Confirmation
+
 - Location: Inside DevOps Agent
 - Shows all components to deploy
 - User chooses: All, Partial, or Cancel
@@ -352,10 +356,12 @@ This is a Salesforce DX project.
 **Documentation:** `docs/`
 
 ### Org Details
+
 - **Target Org:** `rohitdotnet75.bb85a2297fcd@agentforce.com`
 - **Org ID:** `00Dg500000583h1EAA`
 
 ### Key Conventions
+
 - **Field Prefixes**: Use custom field suffix `__c`; no custom namespace prefix
 - **Trigger Pattern**: Handler class pattern (one trigger per object, logic in handler)
 - **Deployment**: Via Salesforce MCP only (never raw `sf` CLI from main agent)
@@ -365,6 +371,7 @@ This is a Salesforce DX project.
 ## SF CLI Reference
 
 ### Deploy Command
+
 ```bash
 # Correct — use -d (--source-dir)
 sf project deploy start -d <path>
@@ -378,12 +385,14 @@ sf project deploy start -d <path>
 ## Architecture Reference
 
 ### OmniStudio Components
+
 - Integration Procedures: `Type_SubType` format
 - OmniScripts: `TypeSubTypeLanguage` format
 - DataRaptors: `DM`, `DML`, `DME` prefixes
 - FlexCards: `Name_Author_Version` format
 
 ### Apex Patterns
+
 - `with sharing` for all service classes
 - Handler pattern for triggers (one trigger per object)
 - `AuraHandledException` for LWC errors
@@ -397,15 +406,73 @@ sf project deploy start -d <path>
 ## Flow Requirements
 
 ### Record-Triggered Flows
+
 - **Always** set `<triggerOrder>` explicitly — without it Salesforce assigns 10/20/30 and code scanners flag it
 - **Never** combine a synchronous `<connector>` AND a `<scheduledPaths>` `AsyncAfterCommit` on the same `<start>` element — this creates duplicate execution paths
 - After-save flows that create unrelated records must use an `AsyncAfterCommit` scheduled path **only** (no sync connector)
 
 ### Flow Quality Rules
+
 - Add null checks on all optional lookup fields before any DML element
 - Add fault connectors on every DML element (Create/Update/Delete records)
 - Add a meaningful `description` on every element
 - Naming convention: `Object_Name_Action_Description` (e.g., `Lead_FollowUp_Create_Task`)
+
+---
+
+## Trigger Handler Patterns (Learned)
+
+- Method naming on handler classes: use `beforeInsert`, `afterInsert`, etc. — NO `on` prefix (e.g., NOT `onBeforeInsert`)
+- Always extract the composite-key separator as a named constant (`KEY_SEPARATOR`) — pipe `'|'` alone is a magic string
+- Duplicate detection SOQL must use bind variables narrowed to incoming batch fields — never query all records with only `WHERE IsClosed = false`
+- Use `OR` between field groups in WHERE clause when some fields may be null (safer than AND which would exclude null-field records)
+- Within-batch duplicate detection must be handled as a separate pass before the DB query pass
+- `@TestVisible` should be applied to: recursion guard, named constants, and key private methods used in tests
+- Test classes should use `@TestSetup` for shared Account/Contact creation; individual tests query them back via SOQL
+
+---
+
+## Agentforce Agent Script Patterns (Learned)
+
+- **Bundle location:** `force-app/main/default/aiAuthoringBundles/<AgentName>/`
+- **Files required:** `<AgentName>.agent` (script) + `<AgentName>.bundle-meta.xml` (metadata)
+- **Metadata element:** `<AiAuthoringBundle>` (NOT `<AgentBundle>`) — match existing project pattern
+- **Bundle target format:** `<target>AgentName.v6</target>` — must match an existing BotVersion in the org
+- **Deployment prerequisite:** The Einstein Agent shell must be created in **Setup → Einstein Agents** first; deploying the bundle without the BotVersion fails with "no BotVersion named X found"
+- **Action definition:** Goes inside the `topic` block with `target:`, `inputs:`, `outputs:`, `label:`, `require_user_confirmation:`, `include_in_progress_indicator:` fields
+- **Action target for Apex:** `apex://ClassName` (e.g., `apex://CaseLookupAction`)
+- **Action target for Flow:** `flow://FlowApiName`
+- **Variable prefixes in script:** `@variables.`, `@actions.`, `@outputs.`, `@topic.`, `@utils.`
+- **`WITH SECURITY_ENFORCED` in `@InvocableMethod`:** Blocks relationship field access (e.g., `Owner.Name`) for test users — prefer `WITH USER_MODE` per project standard
+- **Bulkification in `@InvocableMethod`:** Always collect all input values into a `Set`, run a single `WHERE field IN :set` SOQL, then map results — never run SOQL inside a for loop even though agents typically pass one item; bulk callers and tests will fail
+
+---
+
+## State/Country Picklists (Learned)
+
+- **Org has State/Country Picklists ENABLED** — free-text state/country values are rejected on insert/update
+- **Valid Country integration value:** `'United States'` (NOT `'US'` — `'US'` fails with `FIELD_INTEGRITY_EXCEPTION`)
+- **State codes (CA, NY, TX, etc.)** also fail as integration values in this org's picklist config
+- **Test data strategy:** Avoid `BillingState`, `BillingCountry`, `MailingState`, `MailingCountry` in test data. Use only `Street`, `City`, `PostalCode` fields which don't require picklist validation
+- **If State must be set:** Must also set Country first; Salesforce enforces "country required before state" when picklists are enabled
+- **Legacy data:** Existing org records may have pre-picklist free-text values (e.g., `'TX'`, `'USA'`) that are grandfathered in but cannot be re-inserted
+
+---
+
+## Apex HTTP Callout Patterns (Learned)
+
+- **Always use Named Credentials** for external callouts — never hardcode URLs in Apex constants. Endpoint format: `callout:CredentialName/path`
+- **Named Credential metadata (legacy format):** Use `<protocol>NoAuthentication</protocol>` + `<principalType>Anonymous</principalType>` for public APIs — the new-style `ExternalCredential` XML with `<authenticationProtocol>NoAuthentication</authenticationProtocol>` fails Metadata API schema validation in this org
+- **No Remote Site Setting needed** when using Named Credentials — the Named Credential acts as its own callout allowlist
+- **`AuraHandledException` message quirk:** `new AuraHandledException('msg').getMessage()` returns `"Script-thrown exception"` at runtime, NOT the message passed to the constructor. Always call `setMessage()` explicitly after construction:
+    ```apex
+    AuraHandledException ex = new AuraHandledException(msg);
+    ex.setMessage(msg);
+    throw ex;
+    ```
+- **Exception type consistency:** If a method is `@AuraEnabled`, throw `AuraHandledException` for all error paths (including non-200 HTTP responses) — don't throw `CalloutException` and then wrap it in an outer `catch (Exception e)` as `AuraHandledException`. The outer catch will swallow it and tests expecting `CalloutException` will fail
+- **`@AuraEnabled(cacheable=true)`** is appropriate for read-only GET callouts consumed by LWC
+- **Named constant for endpoint:** Always store `callout:CredentialName/path` as a `@TestVisible` private static final constant; the test mock's `respond()` should assert `req.getEndpoint()` against the constant, not a hardcoded string
 
 ---
 

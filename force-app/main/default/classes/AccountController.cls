@@ -13,9 +13,9 @@ public with sharing class AccountController {
         @AuraEnabled
         public List<Account> accounts;
 
-        /** @description Total number of Account records visible to the running user. */
+        /** @description Indicates whether more Account records exist beyond the returned page. 🟠 */
         @AuraEnabled
-        public Integer totalCount;
+        public Boolean hasMore;
     }
 
     // ─── Public API ──────────────────────────────────────────────────────────────
@@ -29,18 +29,31 @@ public with sharing class AccountController {
      *   AccountController.AccountResult result = AccountController.getAccounts(3);
      */
     @AuraEnabled(cacheable=true)
-    public static AccountResult getAccounts(Integer displayCount) {
+    public static AccountResult getAccountss(Integer displayCount) {
         Integer lim = clampDisplayCount(displayCount);
 
         AccountResult result = new AccountResult();
-        result.accounts = [
+        // Query one extra row to detect if more records exist without issuing an unbounded COUNT(). 🟠
+        List<Account> rows = [
             SELECT Id, Name, Industry, Phone, AnnualRevenue, Rating
             FROM Account
             WITH USER_MODE
             ORDER BY Name ASC
-            LIMIT :lim
+            LIMIT :(lim + 1)
         ];
-        result.totalCount = [SELECT COUNT() FROM Account WITH USER_MODE];
+
+        result.hasMore = rows.size() > lim; // 🟠 set true if extra row was fetched (more data available)
+        // In Apex, List.subList(begin, endExclusive) exists, but not on SObject lists in some API levels.
+        // Use manual copy to ensure compatibility.
+        if (result.hasMore) {
+            List<Account> page = new List<Account>();
+            for (Integer i = 0; i < lim; i++) {
+                page.add(rows[i]);
+            }
+            result.accounts = page;
+        } else {
+            result.accounts = rows;
+        }
 
         return result;
     }
@@ -52,5 +65,14 @@ public with sharing class AccountController {
             return 2;
         }
         return value > 5 ? 5 : value;
+    }
+
+    /**
+     * @description Returns a list of up to 10 Account records.
+     * @return List of Account records with Id, Name, and Industry fields.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Account> getAccounts() {
+        return [SELECT Id, Name, Industry FROM Account WITH USER_MODE LIMIT 10];
     }
 }

@@ -1,0 +1,42 @@
+<template>
+    <template lwc:if={isLoading}>
+        <div class="slds-is-relative slds-var-p-around_small" data-id="loading">
+            <lightning-spinner
+                alternative-text="Loading accounts"
+                size="small"
+            ></lightning-spinner>
+        </div>
+    </template>
+    <template lwc:elseif={hasError}>
+        <div
+            class="slds-text-color_error slds-var-p-around_small"
+            role="alert"
+            aria-live="assertive"
+            data-id="error"
+        >
+            {errorMessage}
+        </div>
+    </template>
+    <template lwc:elseif={hasAccounts}>
+        <ul class="slds-list_dotted slds-var-p-around_small" data-id="list">
+            <template for:each={accounts} for:item="acc">
+                <li key={acc.Id}>
+                    <span>{acc.Name}</span>
+                    <template lwc:if={acc.Industry}>
+                        <span class="slds-text-color_weak">
+                            — {acc.Industry}</span
+                        >
+                    </template>
+                </li>
+            </template>
+        </ul>
+    </template>
+    <template lwc:else>
+        <div
+            class="slds-var-p-around_small slds-text-color_weak"
+            data-id="empty"
+        >
+            No accounts found...
+        </div>
+    </template>
+</template>

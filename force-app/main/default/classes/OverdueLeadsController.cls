@@ -6,7 +6,6 @@
  * @see overdueLeads (LWC)
  */
 public with sharing class OverdueLeadsController {
-
     @TestVisible
     private static Boolean forceException = false;
 
@@ -27,9 +26,10 @@ public with sharing class OverdueLeadsController {
             List<Lead> leads = [
                 SELECT Id, Name, Company, Days_Since_Last_Contact__c
                 FROM Lead
-                WHERE Is_Overdue__c = true
+                WHERE
+                    Is_Overdue__c = TRUE
                     AND OwnerId = :UserInfo.getUserId()
-                    AND IsConverted = false
+                    AND IsConverted = FALSE
                 WITH USER_MODE
                 ORDER BY Days_Since_Last_Contact__c DESC
             ];
@@ -37,11 +37,14 @@ public with sharing class OverdueLeadsController {
             // Enforce FLS by stripping inaccessible fields rather than throwing.
             // The class already uses 'with sharing' for record-level security.
             SObjectAccessDecision decision = Security.stripInaccessible(
-                AccessType.READABLE, leads
+                AccessType.READABLE,
+                leads
             );
             return (List<Lead>) decision.getRecords();
         } catch (Exception ex) {
-            AuraHandledException ahe = new AuraHandledException(ex.getMessage());
+            AuraHandledException ahe = new AuraHandledException(
+                ex.getMessage()
+            );
             ahe.setMessage(ex.getMessage());
             throw ahe;
         }

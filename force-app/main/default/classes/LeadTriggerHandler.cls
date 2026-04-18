@@ -13,7 +13,6 @@
  * @see LeadTrigger
  */
 public with sharing class LeadTriggerHandler {
-
     // ─── Constants ──────────────────────────────────────────────────────────────
 
     private static final Integer OVERDUE_THRESHOLD_DAYS = 7;
@@ -75,7 +74,10 @@ public with sharing class LeadTriggerHandler {
      * @param newLeads List of Lead records being saved.
      * @param oldMap   Previous field values; null during insert.
      */
-    private void calculateContactMetrics(List<Lead> newLeads, Map<Id, Lead> oldMap) {
+    private void calculateContactMetrics(
+        List<Lead> newLeads,
+        Map<Id, Lead> oldMap
+    ) {
         Date today = Date.today();
 
         for (Lead lead : newLeads) {
@@ -83,7 +85,8 @@ public with sharing class LeadTriggerHandler {
 
             if (!isInsert) {
                 Lead oldLead = oldMap.get(lead.Id);
-                Boolean lastContactChanged = (lead.Last_Contacted_Date__c != oldLead.Last_Contacted_Date__c);
+                Boolean lastContactChanged = (lead.Last_Contacted_Date__c !=
+                oldLead.Last_Contacted_Date__c);
 
                 if (!lastContactChanged) {
                     continue;

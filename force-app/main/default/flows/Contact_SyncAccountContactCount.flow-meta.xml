@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>65.0</apiVersion>
+    <description
+    >When a Contact is created or updated with an Account, counts all related Contacts and updates Account.Contact_Count__c.</description>
+    <label>Contact Sync Account Contact Count</label>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+
+    <!-- Variable to hold the running count -->
+    <variables>
+        <name>varContactCount</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+
+    <!-- ASSIGNMENTS -->
+
+    <!-- Increment counter by 1 on each loop iteration (loops back to Loop_Contacts) -->
+    <assignments>
+        <name>Increment_Count</name>
+        <label>Assign Contact Count</label>
+        <locationX>396</locationX>
+        <locationY>352</locationY>
+        <assignmentItems>
+            <assignToReference>varContactCount</assignToReference>
+            <operator>Add</operator>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Loop_Contacts</targetReference>
+        </connector>
+    </assignments>
+
+    <!-- Fault handler: capture error and end gracefully -->
+    <assignments>
+        <name>Capture_Fault</name>
+        <label>Capture Fault</label>
+        <locationX>396</locationX>
+        <locationY>528</locationY>
+        <assignmentItems>
+            <assignToReference>varContactCount</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <!-- LOOP: iterate over contacts collection to build count -->
+    <loops>
+        <name>Loop_Contacts</name>
+        <label>Loop Contacts</label>
+        <locationX>176</locationX>
+        <locationY>352</locationY>
+        <collectionReference>Get_Contacts</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Increment_Count</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>Update_Account</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+
+    <!-- GET RECORDS: fetch all contacts for this account -->
+    <recordLookups>
+        <name>Get_Contacts</name>
+        <label>Get Contacts</label>
+        <locationX>176</locationX>
+        <locationY>176</locationY>
+        <connector>
+            <targetReference>Loop_Contacts</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.AccountId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Contact</object>
+        <queriedFields>Id</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <!-- UPDATE RECORDS: write the count to the Account -->
+    <recordUpdates>
+        <name>Update_Account</name>
+        <label>Update Account</label>
+        <locationX>176</locationX>
+        <locationY>528</locationY>
+        <faultConnector>
+            <targetReference>Capture_Fault</targetReference>
+        </faultConnector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.AccountId</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Contact_Count__c</field>
+            <value>
+                <elementReference>varContactCount</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Account</object>
+    </recordUpdates>
+
+    <!-- START -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Contacts</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>Contact</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+
+    <triggerOrder>10</triggerOrder>
+</Flow>

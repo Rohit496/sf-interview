@@ -13,7 +13,6 @@
  * Database.executeBatch(new OpenLeadFollowUpBatch(), 50);
  */
 public with sharing class OpenLeadFollowUpBatch implements Database.Batchable<SObject> {
-
     private static final String TASK_SUBJECT = 'Close the Lead or mark it Bogus';
     private static final String TASK_STATUS = 'Not Started';
     private static final String TASK_PRIORITY = 'Normal';
@@ -54,8 +53,7 @@ public with sharing class OpenLeadFollowUpBatch implements Database.Batchable<SO
             [
                 SELECT Id, OwnerId
                 FROM Lead
-                WHERE IsConverted = false
-                AND CreatedDate <= :thresholdDate
+                WHERE IsConverted = FALSE AND CreatedDate <= :thresholdDate
             ]
         );
     }
@@ -66,7 +64,10 @@ public with sharing class OpenLeadFollowUpBatch implements Database.Batchable<SO
      * @param batchContext The batch context provided by the platform.
      * @param scope List of Lead records to process.
      */
-    public void execute(Database.BatchableContext batchContext, List<Lead> scope) {
+    public void execute(
+        Database.BatchableContext batchContext,
+        List<Lead> scope
+    ) {
         Date dueDate = Date.today().addDays(TASK_DUE_DAYS);
         List<Task> tasksToInsert = new List<Task>();
 
@@ -87,15 +88,23 @@ public with sharing class OpenLeadFollowUpBatch implements Database.Batchable<SO
             return;
         }
 
-        List<Database.SaveResult> results = Database.insert(tasksToInsert, false, AccessLevel.USER_MODE);
+        List<Database.SaveResult> results = Database.insert(
+            tasksToInsert,
+            false,
+            AccessLevel.USER_MODE
+        );
 
         for (Integer i = 0; i < results.size(); i++) {
             if (!results[i].isSuccess()) {
                 for (Database.Error err : results[i].getErrors()) {
                     System.debug(
                         LoggingLevel.ERROR,
-                        'Failed to create Task for Lead Id: ' + scope[i].Id +
-                        ' | Error: ' + err.getStatusCode() + ' - ' + err.getMessage()
+                        'Failed to create Task for Lead Id: ' +
+                            scope[i].Id +
+                            ' | Error: ' +
+                            err.getStatusCode() +
+                            ' - ' +
+                            err.getMessage()
                     );
                 }
             }
@@ -117,9 +126,12 @@ public with sharing class OpenLeadFollowUpBatch implements Database.Batchable<SO
         System.debug(
             LoggingLevel.INFO,
             'OpenLeadFollowUpBatch completed. ' +
-            'Batches processed: ' + job.JobItemsProcessed +
-            ' | Errors: ' + job.NumberOfErrors +
-            ' | Total batches: ' + job.TotalJobItems
+                'Batches processed: ' +
+                job.JobItemsProcessed +
+                ' | Errors: ' +
+                job.NumberOfErrors +
+                ' | Total batches: ' +
+                job.TotalJobItems
         );
     }
 }

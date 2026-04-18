@@ -1,24 +1,44 @@
 /**
- * accountHealthIndicator component styles.
- * Uses SLDS theme tokens where possible; custom overrides only
- * where the base badge component lacks a built-in variant.
+ * accountHealthIndicator component styles (SLDS 2 compliant).
+ * - Avoid overriding core SLDS classes (no .slds-* overrides)
+ * - Use component-scoped classes and custom properties (non --slds-*)
+ * - Keep minimal overrides for visual parity
  */
 
-/* Ensure badge text is readable on colored backgrounds */
-.slds-badge.slds-theme_success {
-    background-color: var(--slds-g-color-success-base-50, #2e844a);
-    color: var(--slds-g-color-on-success, #ffffff);
-    border: none;
+/* Component-scoped CSS Custom Properties (authorable via design tokens if needed) */
+:host {
+    /* background colors */
+    --ah-badge-bg-success: #2e844a;
+    --ah-badge-bg-warning: #dd7a01;
+    --ah-badge-bg-error: #ea001e;
+
+    /* text colors */
+    --ah-badge-on-success: #ffffff;
+    --ah-badge-on-warning: #181818;
+    --ah-badge-on-error: #ffffff;
+
+    /* general */
+    --ah-badge-radius: 0.25rem;
 }
 
-.slds-badge.slds-theme_warning {
-    background-color: var(--slds-g-color-warning-base-50, #dd7a01);
-    color: var(--slds-g-color-neutral-base-10, #181818);
-    border: none;
+/* Base badge refinements (non-SLDS selector) */
+.ah-badge {
+    border: 0;
+    border-radius: var(--ah-badge-radius);
 }
 
-.slds-badge.slds-theme_error {
-    background-color: var(--slds-g-color-error-base-40, #ea001e);
-    color: var(--slds-g-color-on-error, #ffffff);
-    border: none;
+/* Variants mapped to health states */
+.ah-badge_success {
+    background-color: var(--ah-badge-bg-success);
+    color: var(--ah-badge-on-success);
+}
+
+.ah-badge_warning {
+    background-color: var(--ah-badge-bg-warning);
+    color: var(--ah-badge-on-warning);
+}
+
+.ah-badge_error {
+    background-color: var(--ah-badge-bg-error);
+    color: var(--ah-badge-on-error);
 }

@@ -12,7 +12,6 @@
  * @see AccountTrigger
  */
 public with sharing class AccountTriggerHandler {
-
     // ─── Health Rating Constants ────────────────────────────────────────────
 
     /** @description Enum representing Account Health Rating picklist values. */
@@ -24,19 +23,19 @@ public with sharing class AccountTriggerHandler {
 
     /** @description Maps HealthRating enum values to their picklist API strings. */
     private static final Map<HealthRating, String> HEALTH_RATING_LABELS = new Map<HealthRating, String>{
-        HealthRating.GOOD     => 'Good',
-        HealthRating.AVERAGE  => 'Average',
-        HealthRating.AT_RISK  => 'At Risk'
+        HealthRating.GOOD => 'Good',
+        HealthRating.AVERAGE => 'Average',
+        HealthRating.AT_RISK => 'At Risk'
     };
 
     /** @description Revenue threshold for Good rating (exclusive). */
     private static final Decimal REVENUE_HIGH_THRESHOLD = 10000000;
     /** @description Revenue threshold for At Risk rating (exclusive). */
-    private static final Decimal REVENUE_LOW_THRESHOLD  = 1000000;
+    private static final Decimal REVENUE_LOW_THRESHOLD = 1000000;
     /** @description Employee threshold for Good rating (exclusive). */
     private static final Integer EMPLOYEES_HIGH_THRESHOLD = 500;
     /** @description Employee threshold for At Risk rating (exclusive). */
-    private static final Integer EMPLOYEES_LOW_THRESHOLD  = 100;
+    private static final Integer EMPLOYEES_LOW_THRESHOLD = 100;
 
     private static final String AT_RISK_TASK_SUBJECT_PREFIX = 'Review At Risk Account: ';
     private static final Integer AT_RISK_TASK_DUE_DAYS = 3;
@@ -65,7 +64,9 @@ public with sharing class AccountTriggerHandler {
      */
     @TestVisible
     private static Boolean hasRun {
-        get { return hasRunBefore && hasRunAfter; }
+        get {
+            return hasRunBefore && hasRunAfter;
+        }
         set {
             hasRunBefore = value;
             hasRunAfter = value;
@@ -99,7 +100,10 @@ public with sharing class AccountTriggerHandler {
      * @param newAccounts List of updated Account records (Trigger.new).
      * @param oldMap      Map of Account Id → old record state (Trigger.oldMap).
      */
-    public void beforeUpdate(List<Account> newAccounts, Map<Id, Account> oldMap) {
+    public void beforeUpdate(
+        List<Account> newAccounts,
+        Map<Id, Account> oldMap
+    ) {
         if (hasRunBefore) {
             return;
         }
@@ -116,7 +120,10 @@ public with sharing class AccountTriggerHandler {
      * @param newAccounts List of inserted Account records with Ids populated (Trigger.new).
      * @param newMap      Map of Account Id → new record (Trigger.newMap).
      */
-    public void afterInsert(List<Account> newAccounts, Map<Id, Account> newMap) {
+    public void afterInsert(
+        List<Account> newAccounts,
+        Map<Id, Account> newMap
+    ) {
         if (hasRunAfter) {
             return;
         }
@@ -134,7 +141,11 @@ public with sharing class AccountTriggerHandler {
      * @param newMap      Map of Account Id → new record (Trigger.newMap).
      * @param oldMap      Map of Account Id → old record state (Trigger.oldMap).
      */
-    public void afterUpdate(List<Account> newAccounts, Map<Id, Account> newMap, Map<Id, Account> oldMap) {
+    public void afterUpdate(
+        List<Account> newAccounts,
+        Map<Id, Account> newMap,
+        Map<Id, Account> oldMap
+    ) {
         if (hasRunAfter) {
             return;
         }
@@ -165,7 +176,10 @@ public with sharing class AccountTriggerHandler {
      * @param newAccounts Accounts being saved.
      * @param oldMap      Previous field values; null during insert.
      */
-    private void validateAccounts(List<Account> newAccounts, Map<Id, Account> oldMap) {
+    private void validateAccounts(
+        List<Account> newAccounts,
+        Map<Id, Account> oldMap
+    ) {
         for (Account acc : newAccounts) {
             Account oldAcc = (oldMap != null) ? oldMap.get(acc.Id) : null;
 
@@ -197,7 +211,10 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap      Previous field values; null during insert.
      */
     @TestVisible
-    private void preventDuplicateAccounts(List<Account> newAccounts, Map<Id, Account> oldMap) {
+    private void preventDuplicateAccounts(
+        List<Account> newAccounts,
+        Map<Id, Account> oldMap
+    ) {
         // Collect lowercased names from the incoming batch
         Set<String> incomingNamesLower = new Set<String>();
         for (Account acc : newAccounts) {
@@ -223,8 +240,7 @@ public with sharing class AccountTriggerHandler {
         for (Account existing : [
             SELECT Name
             FROM Account
-            WHERE Name IN :incomingNamesLower
-              AND Id NOT IN :excludeIds
+            WHERE Name IN :incomingNamesLower AND Id NOT IN :excludeIds
             WITH USER_MODE
         ]) {
             existingNamesLower.add(existing.Name.toLowerCase());
@@ -293,29 +309,48 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap      Previous field values; null during insert.
      */
     @TestVisible
-    private void evaluateHealthRating(List<Account> newAccounts, Map<Id, Account> oldMap) {
+    private void evaluateHealthRating(
+        List<Account> newAccounts,
+        Map<Id, Account> oldMap
+    ) {
         for (Account acc : newAccounts) {
             // On update, only re-evaluate if relevant fields changed
             if (oldMap != null) {
                 Account oldAcc = oldMap.get(acc.Id);
-                if (oldAcc != null
-                    && acc.AnnualRevenue == oldAcc.AnnualRevenue
-                    && acc.NumberOfEmployees == oldAcc.NumberOfEmployees) {
+                if (
+                    oldAcc != null &&
+                    acc.AnnualRevenue == oldAcc.AnnualRevenue &&
+                    acc.NumberOfEmployees == oldAcc.NumberOfEmployees
+                ) {
                     continue;
                 }
             }
 
             Decimal revenue = acc.AnnualRevenue != null ? acc.AnnualRevenue : 0;
-            Integer employees = acc.NumberOfEmployees != null ? acc.NumberOfEmployees : 0;
+            Integer employees = acc.NumberOfEmployees != null
+                ? acc.NumberOfEmployees
+                : 0;
 
-            if (revenue > REVENUE_HIGH_THRESHOLD && employees > EMPLOYEES_HIGH_THRESHOLD) {
-                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(HealthRating.GOOD);
-            } else if (revenue < REVENUE_LOW_THRESHOLD && employees < EMPLOYEES_LOW_THRESHOLD) {
-                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(HealthRating.AT_RISK);
+            if (
+                revenue > REVENUE_HIGH_THRESHOLD &&
+                employees > EMPLOYEES_HIGH_THRESHOLD
+            ) {
+                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(
+                    HealthRating.GOOD
+                );
+            } else if (
+                revenue < REVENUE_LOW_THRESHOLD &&
+                employees < EMPLOYEES_LOW_THRESHOLD
+            ) {
+                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(
+                    HealthRating.AT_RISK
+                );
             } else {
                 // Average: covers all combinations not meeting Good or At Risk thresholds
                 // (e.g., high revenue with low employees, or mid-range values for both)
-                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(HealthRating.AVERAGE);
+                acc.Health_Rating__c = HEALTH_RATING_LABELS.get(
+                    HealthRating.AVERAGE
+                );
             }
 
             acc.Health_Evaluated_Date__c = DateTime.now();
@@ -333,7 +368,10 @@ public with sharing class AccountTriggerHandler {
      * @param oldMap      Previous field values (Trigger.oldMap).
      */
     @TestVisible
-    private void createAtRiskTasks(List<Account> newAccounts, Map<Id, Account> oldMap) {
+    private void createAtRiskTasks(
+        List<Account> newAccounts,
+        Map<Id, Account> oldMap
+    ) {
         List<Task> tasksToInsert = new List<Task>();
         String atRiskLabel = HEALTH_RATING_LABELS.get(HealthRating.AT_RISK);
 
@@ -344,17 +382,21 @@ public with sharing class AccountTriggerHandler {
             }
 
             // Only create task when rating changed TO 'At Risk' from something else
-            if (acc.Health_Rating__c == atRiskLabel
-                && oldAcc.Health_Rating__c != atRiskLabel) {
-
-                tasksToInsert.add(new Task(
-                    Subject     = AT_RISK_TASK_SUBJECT_PREFIX + acc.Name,
-                    ActivityDate = Date.today().addDays(AT_RISK_TASK_DUE_DAYS),
-                    OwnerId     = acc.OwnerId,
-                    WhatId      = acc.Id,
-                    Status      = 'Not Started',
-                    Priority    = 'High'
-                ));
+            if (
+                acc.Health_Rating__c == atRiskLabel &&
+                oldAcc.Health_Rating__c != atRiskLabel
+            ) {
+                tasksToInsert.add(
+                    new Task(
+                        Subject = AT_RISK_TASK_SUBJECT_PREFIX + acc.Name,
+                        ActivityDate = Date.today()
+                            .addDays(AT_RISK_TASK_DUE_DAYS),
+                        OwnerId = acc.OwnerId,
+                        WhatId = acc.Id,
+                        Status = 'Not Started',
+                        Priority = 'High'
+                    )
+                );
             }
         }
 
@@ -363,7 +405,9 @@ public with sharing class AccountTriggerHandler {
         }
 
         List<Database.SaveResult> results = Database.insert(
-            tasksToInsert, false, AccessLevel.USER_MODE
+            tasksToInsert,
+            false,
+            AccessLevel.USER_MODE
         );
         handleSaveResults(results, tasksToInsert);
     }
@@ -371,36 +415,105 @@ public with sharing class AccountTriggerHandler {
     // ─── After-Update Helpers ────────────────────────────────────────────────
 
     /**
-     * @description Cascades field changes from updated Accounts to related records.
-     *              Query related records once, update in bulk.
-     * @param newAccounts Updated Accounts.
-     * @param oldMap      Previous field values for change detection.
+     * @description Syncs Account billing-address changes to the mailing address
+     *              on related Contacts. Only Contacts whose mailing fields actually
+     *              differ from the new billing values are included in the DML to
+     *              avoid unnecessary governor-limit consumption.
+     * @param newAccounts Updated Accounts (after update context).
+     * @param oldMap      Previous field values keyed by Account Id for change detection.
      */
-    private void syncRelatedRecords(List<Account> newAccounts, Map<Id, Account> oldMap) {
-        // Collect only the Ids where a relevant field actually changed
+    private void syncRelatedRecords(
+        List<Account> newAccounts,
+        Map<Id, Account> oldMap
+    ) {
+        // Collect only the Ids where a billing-address field actually changed
         Set<Id> changedIds = new Set<Id>();
+        Map<Id, Account> changedAccountsById = new Map<Id, Account>();
+
         for (Account acc : newAccounts) {
             Account oldAcc = oldMap.get(acc.Id);
-
-            // TODO: Add field-change guards, e.g.:
-            //   if (acc.Industry != oldAcc.Industry) {
-            //       changedIds.add(acc.Id);
-            //   }
+            if (hasAddressChanged(acc, oldAcc)) {
+                changedIds.add(acc.Id);
+                changedAccountsById.put(acc.Id, acc);
+            }
         }
 
         if (changedIds.isEmpty()) {
             return;
         }
 
-        // TODO: Query related records and apply updates, e.g.:
-        //   List<Opportunity> opps = [
-        //       SELECT Id, StageName
-        //       FROM Opportunity
-        //       WHERE AccountId IN :changedIds
-        //       WITH USER_MODE
-        //   ];
-        //   for (Opportunity opp : opps) { ... }
-        //   Database.update(opps, false, AccessLevel.USER_MODE);
+        // Single bulkified query for all related Contacts
+        List<Contact> contacts = [
+            SELECT
+                Id,
+                AccountId,
+                MailingStreet,
+                MailingCity,
+                MailingState,
+                MailingPostalCode,
+                MailingCountry
+            FROM Contact
+            WHERE AccountId IN :changedIds
+            WITH USER_MODE
+        ];
+
+        // Copy billing → mailing only when at least one field actually differs
+        List<Contact> contactsToUpdate = new List<Contact>();
+        for (Contact con : contacts) {
+            Account parentAcc = changedAccountsById.get(con.AccountId);
+            Boolean isDirty = false;
+
+            if (con.MailingStreet != parentAcc.BillingStreet) {
+                con.MailingStreet = parentAcc.BillingStreet;
+                isDirty = true;
+            }
+            if (con.MailingCity != parentAcc.BillingCity) {
+                con.MailingCity = parentAcc.BillingCity;
+                isDirty = true;
+            }
+            if (con.MailingState != parentAcc.BillingState) {
+                con.MailingState = parentAcc.BillingState;
+                isDirty = true;
+            }
+            if (con.MailingPostalCode != parentAcc.BillingPostalCode) {
+                con.MailingPostalCode = parentAcc.BillingPostalCode;
+                isDirty = true;
+            }
+            if (con.MailingCountry != parentAcc.BillingCountry) {
+                con.MailingCountry = parentAcc.BillingCountry;
+                isDirty = true;
+            }
+
+            if (isDirty) {
+                contactsToUpdate.add(con);
+            }
+        }
+
+        if (!contactsToUpdate.isEmpty()) {
+            List<Database.SaveResult> results = Database.update(
+                contactsToUpdate,
+                false,
+                AccessLevel.USER_MODE
+            );
+            handleSaveResults(results, contactsToUpdate);
+        }
+    }
+
+    /**
+     * @description Compares the five billing-address fields between the new and
+     *              old Account snapshots. Uses the {@code !=} operator which is
+     *              null-safe in Apex (null != 'x' evaluates to true; null != null
+     *              evaluates to false).
+     * @param newAcc The Account record after the update.
+     * @param oldAcc The Account record before the update.
+     * @return {@code true} if any billing-address field changed; {@code false} otherwise.
+     */
+    private Boolean hasAddressChanged(Account newAcc, Account oldAcc) {
+        return newAcc.BillingStreet != oldAcc.BillingStreet ||
+            newAcc.BillingCity != oldAcc.BillingCity ||
+            newAcc.BillingState != oldAcc.BillingState ||
+            newAcc.BillingPostalCode != oldAcc.BillingPostalCode ||
+            newAcc.BillingCountry != oldAcc.BillingCountry;
     }
 
     // ─── Shared Async Helper ─────────────────────────────────────────────────
@@ -428,7 +541,10 @@ public with sharing class AccountTriggerHandler {
      * @param results    List of Database.SaveResult from a partial DML call.
      * @param records    The SObject list aligned by index to {@code results}.
      */
-    private void handleSaveResults(List<Database.SaveResult> results, List<SObject> records) {
+    private void handleSaveResults(
+        List<Database.SaveResult> results,
+        List<SObject> records
+    ) {
         for (Integer i = 0; i < results.size(); i++) {
             if (!results[i].isSuccess()) {
                 for (Database.Error err : results[i].getErrors()) {
@@ -436,9 +552,12 @@ public with sharing class AccountTriggerHandler {
                     //   instead of relying on debug logs in production.
                     System.debug(
                         LoggingLevel.ERROR,
-                        'DML failed for record Id: ' + records[i].Id +
-                        ' | Code: ' + err.getStatusCode() +
-                        ' | Message: ' + err.getMessage()
+                        'DML failed for record Id: ' +
+                            records[i].Id +
+                            ' | Code: ' +
+                            err.getStatusCode() +
+                            ' | Message: ' +
+                            err.getMessage()
                     );
                 }
             }

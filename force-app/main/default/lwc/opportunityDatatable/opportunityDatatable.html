@@ -1,0 +1,72 @@
+<template>
+    <lightning-card title="Opportunities" icon-name="standard:opportunity">
+        <div class="slds-p-around_small">
+            <c-custom-datatable
+                key-field="Id"
+                data={displayedData}
+                columns={columns}
+                draft-values={draftValues}
+                hide-checkbox-column
+                show-row-number-column
+                row-number-offset={rowNumberOffset}
+                onsave={handleSave}
+                oncancel={handleCancel}
+                oncellchange={handleCellChange}
+                errors={tableErrors}
+                is-loading={isLoading}
+            >
+            </c-custom-datatable>
+        </div>
+
+        <!-- Pagination Bar (Material-style, right-aligned) -->
+        <div slot="footer" class="pagination-bar">
+            <span class="pagination-label">Rows per page:</span>
+            <lightning-combobox
+                value={pageSizeStr}
+                options={pageSizeOptions}
+                onchange={handlePageSizeChange}
+                variant="label-hidden"
+                label="Rows per page"
+                dropdown-alignment="auto"
+                class="page-size-combo"
+            ></lightning-combobox>
+            <span class="pagination-info">{pageInfo}</span>
+            <lightning-button-icon
+                icon-name="utility:jump_to_left"
+                onclick={handleFirst}
+                disabled={isFirstPage}
+                alternative-text="First"
+                title="First"
+                variant="bare"
+                size="medium"
+            ></lightning-button-icon>
+            <lightning-button-icon
+                icon-name="utility:chevronleft"
+                onclick={handlePrevious}
+                disabled={isFirstPage}
+                alternative-text="Previous"
+                title="Previous"
+                variant="bare"
+                size="medium"
+            ></lightning-button-icon>
+            <lightning-button-icon
+                icon-name="utility:chevronright"
+                onclick={handleNext}
+                disabled={isLastPage}
+                alternative-text="Next"
+                title="Next"
+                variant="bare"
+                size="medium"
+            ></lightning-button-icon>
+            <lightning-button-icon
+                icon-name="utility:jump_to_right"
+                onclick={handleLast}
+                disabled={isLastPage}
+                alternative-text="Last"
+                title="Last"
+                variant="bare"
+                size="medium"
+            ></lightning-button-icon>
+        </div>
+    </lightning-card>
+</template>

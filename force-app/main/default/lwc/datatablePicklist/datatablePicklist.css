@@ -1,0 +1,23 @@
+/* Allow the combobox dropdown to render outside the cell boundaries */
+:host {
+    overflow: visible !important;
+    position: relative;
+}
+
+.picklistBlock {
+    overflow: visible;
+    position: relative;
+}
+
+.picklist-container {
+    position: absolute;
+    z-index: 9001;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--lwc-colorBackgroundAlt, #ffffff);
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.16);
+    border: 1px solid var(--lwc-colorBorder, #dddbda);
+    border-radius: 0.25rem;
+    padding: 0.25rem;
+}

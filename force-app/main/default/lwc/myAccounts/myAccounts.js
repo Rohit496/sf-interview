@@ -43,10 +43,13 @@ export default class MyAccounts extends LightningElement {
         this.isLoading = false;
         if (data) {
             this.totalCount = data.totalCount;
-            this.accounts = data.accounts.map((acc) => this._enrichAccount(acc));
+            this.accounts = data.accounts.map((acc) =>
+                this._enrichAccount(acc)
+            );
         } else if (error) {
             this.errorMessage =
-                error.body?.message ?? 'An error occurred while loading accounts.';
+                error.body?.message ??
+                'An error occurred while loading accounts.';
         }
     }
 
