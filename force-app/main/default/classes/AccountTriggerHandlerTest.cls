@@ -630,4 +630,197 @@ private class AccountTriggerHandlerTest {
         Assert.areEqual(100, tasks.size(),
             'Exactly 100 Tasks should be created for the 100 accounts that transitioned to At Risk');
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // preventDuplicateAccounts — INSERT scenarios
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * @description Insert an Account with a unique name must succeed with no errors.
+     *              Verifies the happy-path baseline for duplicate prevention.
+     */
+    @IsTest
+    static void insert_uniqueName_succeeds() {
+        Account acc = buildAccount('Unique Acme Inc', REVENUE_AVG, EMPLOYEES_AVG);
+
+        Test.startTest();
+        Database.SaveResult sr = Database.insert(acc, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isTrue(sr.isSuccess(),
+            'Insert of a unique Account Name should succeed without errors');
+        Assert.isTrue(sr.getErrors().isEmpty(),
+            'No errors should be returned for a unique Account Name');
+    }
+
+    /**
+     * @description Insert an Account whose name (same case) already exists in the
+     *              database must fail with the DUPLICATE_NAME_ERROR message.
+     */
+    @IsTest
+    static void insert_duplicateNameSameCase_failsWithError() {
+        // Pre-insert the existing account
+        Account existing = buildAccount('Duplicate Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Database.insert(existing, AccessLevel.SYSTEM_MODE);
+        resetGuards();
+
+        // Attempt to insert another account with the identical name
+        Account duplicate = buildAccount('Duplicate Corp', REVENUE_AVG, EMPLOYEES_AVG);
+
+        Test.startTest();
+        Database.SaveResult sr = Database.insert(duplicate, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isFalse(sr.isSuccess(),
+            'Insert of a duplicate Account Name (same case) should fail');
+        Assert.isFalse(sr.getErrors().isEmpty(),
+            'At least one error should be returned for a duplicate Account Name');
+        Assert.isTrue(
+            sr.getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            'Error message should contain the expected duplicate-name error text'
+        );
+    }
+
+    /**
+     * @description Insert an Account whose name matches an existing Account in a
+     *              different case (e.g., "acme corp" vs. "Acme Corp") must fail.
+     *              Verifies the case-insensitive comparison logic.
+     */
+    @IsTest
+    static void insert_duplicateNameDifferentCase_failsWithError() {
+        // Pre-insert with mixed case
+        Account existing = buildAccount('Acme Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Database.insert(existing, AccessLevel.SYSTEM_MODE);
+        resetGuards();
+
+        // Attempt with all-caps variant
+        Account duplicate = buildAccount('ACME CORP', REVENUE_AVG, EMPLOYEES_AVG);
+
+        Test.startTest();
+        Database.SaveResult sr = Database.insert(duplicate, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isFalse(sr.isSuccess(),
+            'Insert of a duplicate Account Name differing only in case should fail');
+        Assert.isTrue(
+            sr.getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            'Error message should match the duplicate-name error regardless of case difference'
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // preventDuplicateAccounts — UPDATE scenarios
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * @description Update an Account's name to a name already owned by a different
+     *              Account must fail with the DUPLICATE_NAME_ERROR message.
+     */
+    @IsTest
+    static void update_nameTakenByAnotherAccount_failsWithError() {
+        // Insert two distinct accounts
+        Account first  = buildAccount('Alpha Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account second = buildAccount('Beta Corp',  REVENUE_AVG, EMPLOYEES_AVG);
+        Database.insert(new List<Account>{ first, second }, AccessLevel.SYSTEM_MODE);
+        resetGuards();
+
+        // Attempt to rename second to match first
+        second.Name = 'Alpha Corp';
+
+        Test.startTest();
+        Database.SaveResult sr = Database.update(second, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isFalse(sr.isSuccess(),
+            'Updating an Account to a name already owned by another Account should fail');
+        Assert.isTrue(
+            sr.getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            'Error message should contain the expected duplicate-name error when updating to a taken name'
+        );
+    }
+
+    /**
+     * @description Update an Account's name to its own current name (no-op rename)
+     *              must succeed. The handler excludes the record's own Id from the
+     *              duplicate check to prevent false positives.
+     */
+    @IsTest
+    static void update_sameNameAsOwnCurrentName_succeeds() {
+        Account acc = buildAccount('Gamma Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Database.insert(acc, AccessLevel.SYSTEM_MODE);
+        resetGuards();
+
+        // Update with the same Name value (also change an unrelated field)
+        acc.Name = 'Gamma Corp';
+        acc.AnnualRevenue = REVENUE_GOOD;
+
+        Test.startTest();
+        Database.SaveResult sr = Database.update(acc, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isTrue(sr.isSuccess(),
+            'Updating an Account to its own current name should not trigger a duplicate error');
+        Assert.isTrue(sr.getErrors().isEmpty(),
+            'No errors should be returned when the name is unchanged on update');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // preventDuplicateAccounts — Within-batch duplicate
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * @description Inserting two Accounts in the same DML batch that share the
+     *              same name must succeed for the first and fail for the second.
+     *              Verifies within-batch duplicate detection via seenInBatchLower.
+     */
+    @IsTest
+    static void insert_withinBatchDuplicateName_secondRecordFails() {
+        Account first  = buildAccount('Delta Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        Account second = buildAccount('Delta Corp', REVENUE_AVG, EMPLOYEES_AVG);
+        List<Account> batch = new List<Account>{ first, second };
+
+        Test.startTest();
+        List<Database.SaveResult> results = Database.insert(batch, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Assert.isTrue(results[0].isSuccess(),
+            'The first Account in a batch should succeed when its name has not yet been seen');
+        Assert.isFalse(results[1].isSuccess(),
+            'The second Account in a batch should fail when its name duplicates the first');
+        Assert.isTrue(
+            results[1].getErrors()[0].getMessage().contains(AccountTriggerHandler.DUPLICATE_NAME_ERROR),
+            'The within-batch duplicate error message should match the expected constant'
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // preventDuplicateAccounts — Bulk (200 unique records)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * @description Bulk insert of 200 Accounts with entirely unique names must
+     *              succeed for every record. Verifies that the duplicate check
+     *              does not produce false positives and respects governor limits.
+     */
+    @IsTest
+    static void bulkInsert_200UniqueNames_allSucceed() {
+        List<Account> accounts = new List<Account>();
+        for (Integer i = 0; i < 200; i++) {
+            accounts.add(buildAccount('Unique Bulk Corp ' + i, REVENUE_AVG, EMPLOYEES_AVG));
+        }
+
+        Test.startTest();
+        List<Database.SaveResult> results = Database.insert(accounts, false, AccessLevel.SYSTEM_MODE);
+        Test.stopTest();
+
+        Integer successCount = 0;
+        for (Database.SaveResult sr : results) {
+            if (sr.isSuccess()) {
+                successCount++;
+            }
+        }
+
+        Assert.areEqual(200, successCount,
+            'All 200 Accounts with unique names should insert successfully without duplicate errors');
+    }
 }

@@ -351,10 +351,27 @@ This is a Salesforce DX project.
 **Package Directory:** `force-app/main/default`
 **Documentation:** `docs/`
 
+### Org Details
+- **Target Org:** `rohitdotnet75.bb85a2297fcd@agentforce.com`
+- **Org ID:** `00Dg500000583h1EAA`
+
 ### Key Conventions
-- **Field Prefixes**: 
-- **Trigger Pattern**: Handler pattern 
-- **Deployment**: Via Salesforce MCP only
+- **Field Prefixes**: Use custom field suffix `__c`; no custom namespace prefix
+- **Trigger Pattern**: Handler class pattern (one trigger per object, logic in handler)
+- **Deployment**: Via Salesforce MCP only (never raw `sf` CLI from main agent)
+
+---
+
+## SF CLI Reference
+
+### Deploy Command
+```bash
+# Correct — use -d (--source-dir)
+sf project deploy start -d <path>
+
+# WRONG — -p flag does not exist on this command
+# sf project deploy start -p <path>   ← DO NOT USE
+```
 
 ---
 
@@ -368,9 +385,33 @@ This is a Salesforce DX project.
 
 ### Apex Patterns
 - `with sharing` for all service classes
-- Handler pattern for triggers
+- Handler pattern for triggers (one trigger per object)
 - `AuraHandledException` for LWC errors
 - `WITH USER_MODE` for SOQL (API 65.0+)
+- Use `Database.*` methods (not naked DML) for error handling
+- Prefer named constants / enums over magic strings
+- API version 65.0 for all new metadata; existing classes may be on 59.0–63.0
+
+---
+
+## Flow Requirements
+
+### Record-Triggered Flows
+- **Always** set `<triggerOrder>` explicitly — without it Salesforce assigns 10/20/30 and code scanners flag it
+- **Never** combine a synchronous `<connector>` AND a `<scheduledPaths>` `AsyncAfterCommit` on the same `<start>` element — this creates duplicate execution paths
+- After-save flows that create unrelated records must use an `AsyncAfterCommit` scheduled path **only** (no sync connector)
+
+### Flow Quality Rules
+- Add null checks on all optional lookup fields before any DML element
+- Add fault connectors on every DML element (Create/Update/Delete records)
+- Add a meaningful `description` on every element
+- Naming convention: `Object_Name_Action_Description` (e.g., `Lead_FollowUp_Create_Task`)
+
+---
+
+## Post-Task Rule
+
+**After completing every task, update this CLAUDE.md** to reflect any new conventions, patterns, lessons learned, or corrections discovered during that session. This keeps the file current for future sessions.
 
 ---
 

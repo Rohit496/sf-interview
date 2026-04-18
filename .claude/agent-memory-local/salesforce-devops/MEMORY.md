@@ -9,6 +9,12 @@
 - `SoftDrinkOrderStatusTest` - Fails with row lock and assertion errors (pre-existing, unrelated to new deployments)
 - These failures appear during RunLocalTests and are NOT caused by newly deployed code
 
+## Org-Wide Coverage Issue
+- RunLocalTests can cause deployment failures even with 0 test errors, because org-wide coverage drops below 75%
+- Pre-existing uncovered classes (BatchCalloutExample 0/32, AccountController 0/50, SoftDrinkOrderStatus 0/3) drag coverage down
+- WORKAROUND: Use `apexTests` param with specific test classes instead of `apexTestLevel: RunLocalTests`
+- This applies to sandbox/dev orgs too when the deploy tool enforces coverage thresholds
+
 ## Deployment Notes
 - Use `ignoreConflicts: true` when deploying components that may already exist in the org (e.g., fields deployed by admin agent)
 - The `deploy_metadata` tool accepts `sourceDir` as an array of paths
@@ -20,3 +26,4 @@
 ## Deployment History
 - 2026-02-21: Account Health Indicator feature - 7 components deployed successfully (Deploy ID: 0Afg5000004GDwgCAG)
 - 2026-02-21: Account Health fields + handler + test class redeployment + permission set assignment (Deploy IDs: 0Afg5000004GDBuCAO, 0Afg5000004GFgjCAG)
+- 2026-02-22: Duplicate Account Name Prevention - 3 components (AccountTriggerHandler, AccountTriggerHandlerTest, AccountTrigger) deployed with 26/26 tests passing, 92% handler coverage (Deploy ID: 0Afg5000004Hjw5CAC)

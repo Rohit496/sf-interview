@@ -41,6 +41,10 @@ public with sharing class AccountTriggerHandler {
     private static final String AT_RISK_TASK_SUBJECT_PREFIX = 'Review At Risk Account: ';
     private static final Integer AT_RISK_TASK_DUE_DAYS = 3;
 
+    /** @description Error message shown when a duplicate Account Name is detected. */
+    @TestVisible
+    private static final String DUPLICATE_NAME_ERROR = 'A duplicate Account with this name already exists.';
+
     // ─── Recursion Guards ───────────────────────────────────────────────────
 
     /**
@@ -83,6 +87,7 @@ public with sharing class AccountTriggerHandler {
         hasRunBefore = true;
 
         setAccountDefaults(newAccounts);
+        preventDuplicateAccounts(newAccounts, null);
         validateAccounts(newAccounts, null);
         evaluateHealthRating(newAccounts, null);
     }
@@ -100,6 +105,7 @@ public with sharing class AccountTriggerHandler {
         }
         hasRunBefore = true;
 
+        preventDuplicateAccounts(newAccounts, oldMap);
         validateAccounts(newAccounts, oldMap);
         evaluateHealthRating(newAccounts, oldMap);
     }
@@ -172,6 +178,80 @@ public with sharing class AccountTriggerHandler {
             //   if (oldAcc != null && acc.AnnualRevenue < oldAcc.AnnualRevenue) {
             //       acc.AnnualRevenue.addError('Annual Revenue cannot decrease.');
             //   }
+        }
+    }
+
+    // ─── Duplicate Account Name Prevention ────────────────────────────────────
+
+    /**
+     * @description Prevents insertion or update of Accounts whose Name matches
+     *              an existing Account (case-insensitive). Also detects within-batch
+     *              duplicates where two records in the same trigger batch share
+     *              the same name.
+     *
+     *              On update the current record's own Id is excluded from the
+     *              existing-name check so that renaming to the same value does not
+     *              trigger a false positive.
+     *
+     * @param newAccounts Accounts being inserted or updated (Trigger.new).
+     * @param oldMap      Previous field values; null during insert.
+     */
+    @TestVisible
+    private void preventDuplicateAccounts(List<Account> newAccounts, Map<Id, Account> oldMap) {
+        // Collect lowercased names from the incoming batch
+        Set<String> incomingNamesLower = new Set<String>();
+        for (Account acc : newAccounts) {
+            if (String.isNotBlank(acc.Name)) {
+                incomingNamesLower.add(acc.Name.toLowerCase());
+            }
+        }
+
+        if (incomingNamesLower.isEmpty()) {
+            return;
+        }
+
+        // Collect Ids to exclude on update (the records being updated themselves)
+        Set<Id> excludeIds = new Set<Id>();
+        if (oldMap != null) {
+            excludeIds = oldMap.keySet();
+        }
+
+        // Query existing Accounts whose lowercased Name matches any incoming name.
+        // The WHERE clause filters on the standard Name field; Apex-side toLowerCase()
+        // ensures case-insensitive comparison.
+        Set<String> existingNamesLower = new Set<String>();
+        for (Account existing : [
+            SELECT Name
+            FROM Account
+            WHERE Name IN :incomingNamesLower
+              AND Id NOT IN :excludeIds
+            WITH USER_MODE
+        ]) {
+            existingNamesLower.add(existing.Name.toLowerCase());
+        }
+
+        // Walk the batch: check against DB duplicates and within-batch duplicates
+        Set<String> seenInBatchLower = new Set<String>();
+        for (Account acc : newAccounts) {
+            if (String.isBlank(acc.Name)) {
+                continue;
+            }
+
+            String nameLower = acc.Name.toLowerCase();
+
+            // Check 1: Duplicate exists in the database
+            if (existingNamesLower.contains(nameLower)) {
+                acc.Name.addError(DUPLICATE_NAME_ERROR);
+                continue;
+            }
+
+            // Check 2: Within-batch duplicate (second occurrence gets the error)
+            if (seenInBatchLower.contains(nameLower)) {
+                acc.Name.addError(DUPLICATE_NAME_ERROR);
+                continue;
+            }
+
+            seenInBatchLower.add(nameLower);
         }
     }
 
