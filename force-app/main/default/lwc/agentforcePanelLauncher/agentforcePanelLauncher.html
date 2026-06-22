@@ -1,59 +1,79 @@
 <template>
-    <lightning-card title="Agentforce ACC API Demo" icon-name="utility:einstein">
-        <div class="panel-content slds-var-p-around_medium">
-
+    <lightning-card
+        title="Agentforce ACC API Demo"
+        icon-name="utility:einstein"
+    >
+        <div
+            class="panel-content slds-var-p-horizontal_medium slds-var-p-bottom_medium"
+        >
             <!-- Panel controls: open() and close() -->
-            <section class="slds-var-m-bottom_medium">
-                <h3 class="slds-text-title_caps slds-var-m-bottom_x-small" id="panel-heading">
+            <section
+                class="slds-var-m-bottom_large"
+                aria-labelledby="panel-heading"
+            >
+                <h3
+                    id="panel-heading"
+                    class="slds-text-title_caps slds-text-color_weak slds-var-m-bottom_x-small"
+                >
                     Panel
                 </h3>
-                <lightning-button-group aria-labelledby="panel-heading">
+                <lightning-button-group>
                     <lightning-button
                         variant="brand"
                         label="Open"
                         title="Open the Agentforce side panel"
                         icon-name="utility:expand_alt"
-                        onclick={handleOpen}>
+                        onclick={handleOpen}
+                    >
                     </lightning-button>
                     <lightning-button
                         variant="neutral"
                         label="Close"
                         title="Close the Agentforce side panel"
                         icon-name="utility:close"
-                        onclick={handleClose}>
+                        onclick={handleClose}
+                    >
                     </lightning-button>
                 </lightning-button-group>
             </section>
 
-            <hr class="slds-var-m-vertical_medium" />
-
             <!-- Message / execute(): type a message, then send it -->
-            <section>
-                <h3 class="slds-text-title_caps slds-var-m-bottom_x-small" id="message-heading">
+            <section aria-labelledby="message-heading">
+                <h3
+                    id="message-heading"
+                    class="slds-text-title_caps slds-text-color_weak slds-var-m-bottom_x-small"
+                >
                     Send a Message
                 </h3>
-                <div class="slds-grid slds-grid_vertical-align-end slds-gutters_x-small">
-                    <div class="slds-col slds-grow">
+                <lightning-layout
+                    vertical-align="end"
+                    horizontal-align="spread"
+                >
+                    <lightning-layout-item flexibility="grow">
                         <lightning-input
                             type="text"
                             label="Message"
                             placeholder="Type a message for the agent..."
                             value={utterance}
-                            onchange={handleUtteranceChange}>
+                            onchange={handleUtteranceChange}
+                        >
                         </lightning-input>
-                    </div>
-                    <div class="slds-col slds-shrink-none execute-col">
+                    </lightning-layout-item>
+                    <lightning-layout-item
+                        flexibility="no-grow"
+                        class="slds-var-p-left_x-small"
+                    >
                         <lightning-button
                             variant="brand"
                             label="Execute"
                             title="Send the message to the agent"
                             icon-name="utility:send"
-                            onclick={handleExecute}>
+                            onclick={handleExecute}
+                        >
                         </lightning-button>
-                    </div>
-                </div>
+                    </lightning-layout-item>
+                </lightning-layout>
             </section>
-
         </div>
     </lightning-card>
 </template>
