@@ -1,0 +1,23 @@
+<template>
+    <lightning-card title="Counter Display">
+        <div class="slds-var-p-around_medium">
+            <div class="slds-grid slds-var-m-bottom_small">
+                <div class="slds-col slds-var-m-right_large">
+                    <p class="slds-text-title_caps">Count</p>
+                    <p class="slds-text-heading_large">{count}</p>
+                </div>
+                <div class="slds-col">
+                    <p class="slds-text-title_caps">Double</p>
+                    <p class="slds-text-heading_large">{doubleCount}</p>
+                </div>
+            </div>
+            <lightning-button
+                label="Zero"
+                onclick={handleZero}
+            ></lightning-button>
+            <p class="slds-var-m-top_small slds-text-body_small">
+                Updates recorded: {historyLength}
+            </p>
+        </div>
+    </lightning-card>
+</template>

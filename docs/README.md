@@ -3,7 +3,7 @@
 **Project:** Salesforce DX -- Interview Project
 **API Version:** 65.0
 **Package Directory:** `force-app/main/default`
-**Last Updated:** 2026-02-22
+**Last Updated:** 2026-06-21
 
 ---
 
@@ -14,6 +14,8 @@
 | [account-health-indicator.md](./account-health-indicator.md) | Account Health Indicator | Account, Task | 2 custom fields, 1 permission set, 1 trigger, 1 handler class, 1 test class, 1 LWC |
 | [lead-follow-up-tracking.md](./lead-follow-up-tracking.md) | Lead Follow-Up Tracking | Lead | 5 custom fields, 1 permission set, 1 trigger, 1 handler class, 2 Apex classes, 2 test classes, 1 LWC |
 | [duplicate-account-name-prevention.md](./duplicate-account-name-prevention.md) | Duplicate Account Name Prevention | Account | No new metadata; 1 handler class modified, 1 test class modified |
+| [account-age-days-formula-field.md](./account-age-days-formula-field.md) | Account Age (Days) Formula Field | Account | 1 formula field (declarative only) |
+| [agentforce-panel-launcher.md](./agentforce-panel-launcher.md) | Agentforce Panel Launcher | None (LWC only) | 1 LWC component (4 files) using `lightning/accApi` |
 
 ---
 
@@ -30,6 +32,7 @@
 | `Lead` | `Is_Overdue__c` | Checkbox | Lead Follow-Up Tracking |
 | `Lead` | `Primary__c` | Picklist (Yes, No) | Lead Management |
 | `Lead` | `ProductInterest__c` | Picklist (GC1000, GC3000, GC5000 series) | Lead Management |
+| `Account` | `Account_Age_Days__c` | Formula — Number (18,0) | Account Age (Days) Formula Field |
 
 ### Permission Sets
 
@@ -62,6 +65,7 @@
 |-----------|--------------|-----------------|---------|
 | `accountHealthIndicator` | Account Health Indicator | Account Record Page | Account Health Indicator |
 | `overdueLeads` | Overdue Leads | Lead Record Page, App Page, Home Page | Lead Follow-Up Tracking |
+| `agentforcePanelLauncher` | Agentforce Panel Launcher | Record Page, Home Page, App Page | Agentforce Panel Launcher |
 
 ---
 

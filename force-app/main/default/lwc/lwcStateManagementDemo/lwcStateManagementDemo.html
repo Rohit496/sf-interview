@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="LWC State Management Demo" icon-name="standard:apex">
+        <div class="slds-var-p-around_medium">
+            <p class="slds-text-body_regular slds-var-m-bottom_medium">
+                Both child components share state through a single state manager
+                provided via <code>fromContext</code>. Click controls and watch
+                the display update reactively without props or events.
+            </p>
+
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <c-counter-display></c-counter-display>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <c-counter-controls></c-counter-controls>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>

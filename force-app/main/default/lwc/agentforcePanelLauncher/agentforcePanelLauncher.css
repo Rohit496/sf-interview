@@ -1,0 +1,21 @@
+/* Constrain content width so the layout doesn't stretch awkwardly on wide pages. */
+.panel-content {
+    max-width: 480px;
+}
+
+/* Subtle, consistent divider between the two sections. */
+.panel-content hr {
+    border: none;
+    border-top: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+
+/* Keep section headings muted and well-aligned with the controls below them. */
+.panel-content h3 {
+    color: var(--slds-g-color-neutral-base-30, #747474);
+    letter-spacing: 0.0625rem;
+}
+
+/* Nudge the Execute button so it baseline-aligns with the input field. */
+.execute-col {
+    padding-bottom: var(--slds-g-sizing-border-1, 1px);
+}

@@ -27,3 +27,10 @@
 - 2026-02-21: Account Health Indicator feature - 7 components deployed successfully (Deploy ID: 0Afg5000004GDwgCAG)
 - 2026-02-21: Account Health fields + handler + test class redeployment + permission set assignment (Deploy IDs: 0Afg5000004GDBuCAO, 0Afg5000004GFgjCAG)
 - 2026-02-22: Duplicate Account Name Prevention - 3 components (AccountTriggerHandler, AccountTriggerHandlerTest, AccountTrigger) deployed with 26/26 tests passing, 92% handler coverage (Deploy ID: 0Afg5000004Hjw5CAC)
+- 2026-05-06: LWC State Management Demo - 4 LWC bundles (counterStateManager, counterDisplay, counterControls, lwcStateManagementDemo) deployed via sf CLI to `rohit007salesforce-ba8m@force.com` with NoTestRun (Deploy ID: 0AfWs00001X8aCTKAZ)
+- 2026-05-06: LWC State Management Demo redeployment - same 4 LWC bundles redeployed to `rohit007salesforce-ba8m@force.com` (Deploy ID: 0AfWs00001X8aQzKAJ, 17 files, 4/4 components, 0 errors)
+- 2026-06-22: agentforcePanelLauncher LWC (simplified to 3 ACC API actions: open/close/execute) redeployed to `rohitdotnet75.bb85a2297fcd@agentforce.com` via deploy_metadata MCP tool with ignoreConflicts (Deploy ID: 0Afg500000AQaQHCA1, 7 files, 1/1 component, 0 errors, NoTestRun)
+- 2026-06-22: agentforcePanelLauncher LWC UI/CSS polish update redeployed to `rohitdotnet75.bb85a2297fcd@agentforce.com` via deploy_metadata MCP with ignoreConflicts (Deploy ID: 0Afg500000AQaq5CAD, 7 files, 1/1 component, changed/not-created, 0 errors, NoTestRun)
+
+## Additional Org
+- `rohit007salesforce-ba8m@force.com` — second target org used for LWC-only deployments. v65.0 metadata deployed via v67.0 SOAP API. No Apex coverage gating issues observed since LWC-only deploys with NoTestRun bypass the test framework.

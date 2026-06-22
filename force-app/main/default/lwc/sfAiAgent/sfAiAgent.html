@@ -1,0 +1,200 @@
+<template>
+  <div class="agent-shell">
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <div class="sidebar">
+
+      <div class="sidebar-header">
+        <div class="sf-logo-wrap">
+          <div class="sf-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+              <path d="M10 3C7.8 3 6 4.8 6 7c0 .4.1.8.2 1.2C4.9 8.7 4 9.9 4 11.3 4 13 5.3 14.4 7 14.7V15h10v-.3c1.7-.3 3-1.7 3-3.4 0-1.4-.9-2.6-2.2-3.1C17.9 7.8 18 7.4 18 7c0-2.2-1.8-4-4-4-.9 0-1.7.3-2.4.8C11.1 3.3 10.6 3 10 3z" fill="white" opacity="0.9"/>
+            </svg>
+          </div>
+          <div>
+            <p class="sf-title">SF AI Agent</p>
+            <p class="sf-sub">Powered by GPT-4</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="quick-label">Quick Actions</p>
+
+      <template for:each={quickActions} for:item="action">
+        <button key={action.id} class="quick-btn" data-prompt={action.prompt}
+                onclick={handleQuickAction}>
+          <span class="quick-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                 width="14" height="14" fill="currentColor">
+              <path d={action.svg}></path>
+            </svg>
+          </span>
+          <span class="quick-text">{action.label}</span>
+        </button>
+      </template>
+
+      <div class="sidebar-divider"></div>
+      <p class="quick-label">Org Info</p>
+
+      <template for:each={orgActions} for:item="action">
+        <button key={action.id} class="quick-btn org-btn" data-prompt={action.prompt}
+                onclick={handleQuickAction}>
+          <span class="quick-icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                 width="14" height="14" fill="currentColor">
+              <path d={action.svg}></path>
+            </svg>
+          </span>
+          <span class="quick-text">{action.label}</span>
+        </button>
+      </template>
+
+      <div class="sidebar-footer">
+        <div class="org-indicator">
+          <span class="org-dot-live"></span>
+          <span class="org-label">Live Org Connected</span>
+        </div>
+      </div>
+
+    </div>
+    <!-- ═══ END SIDEBAR ═══ -->
+
+    <!-- ═══ MAIN CHAT ═══ -->
+    <div class="main">
+
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="header-left">
+          <div class="header-bot-avatar">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+              <rect x="3" y="8" width="18" height="13" rx="3" fill="white" opacity="0.9"/>
+              <circle cx="9"  cy="14" r="2" fill="#0070d2"/>
+              <circle cx="15" cy="14" r="2" fill="#0070d2"/>
+              <path d="M12 3v4M9 3h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="12" cy="3" r="1" fill="white"/>
+            </svg>
+          </div>
+          <div>
+            <p class="agent-name">Salesforce AI Agent</p>
+            <p class="agent-status">
+              <span class="status-dot"></span>
+              SOQL · Metadata · Apex · LWC · Org Data
+            </p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="model-badge">
+            <span class="model-dot"></span>
+            gpt-4o-mini
+          </div>
+          <button class="clear-btn" onclick={clearChat} title="Clear conversation">
+            <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages" lwc:ref="messageContainer">
+
+        <template for:each={messages} for:item="msg">
+          <div key={msg.id} class={msg.wrapperClass}>
+
+            <!-- Avatar -->
+            <div class={msg.avatarClass}>
+              <template if:true={msg.isAi}>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                  <rect x="3" y="8" width="18" height="13" rx="3" fill="#0070d2"/>
+                  <circle cx="9"  cy="14" r="2" fill="white"/>
+                  <circle cx="15" cy="14" r="2" fill="white"/>
+                  <path d="M12 3v4" stroke="#0070d2" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="12" cy="3" r="1.5" fill="#0070d2"/>
+                </svg>
+              </template>
+              <template if:false={msg.isAi}>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                  <circle cx="12" cy="8" r="4" fill="#706e6b"/>
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#706e6b" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </template>
+            </div>
+
+            <!-- Bubble -->
+            <div class={msg.bubbleClass}>
+              <template if:true={msg.isHtml}>
+                <div class="msg-content" lwc:dom="manual" data-id={msg.id}></div>
+              </template>
+              <template if:false={msg.isHtml}>
+                <span>{msg.content}</span>
+              </template>
+              <span class="msg-time">{msg.time}</span>
+            </div>
+
+          </div>
+        </template>
+
+        <!-- Thinking indicator -->
+        <template if:true={isThinking}>
+          <div class="msg ai">
+            <div class="msg-avatar ai">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                <rect x="3" y="8" width="18" height="13" rx="3" fill="#0070d2"/>
+                <circle cx="9"  cy="14" r="2" fill="white"/>
+                <circle cx="15" cy="14" r="2" fill="white"/>
+                <path d="M12 3v4" stroke="#0070d2" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="12" cy="3" r="1.5" fill="#0070d2"/>
+              </svg>
+            </div>
+            <div class="bubble ai thinking-bubble">
+              <div class="dot-pulse">
+                <span></span><span></span><span></span>
+              </div>
+              <span class="thinking-text">Agent is thinking…</span>
+            </div>
+          </div>
+        </template>
+
+      </div>
+      <!-- end .messages -->
+
+      <!-- Suggestion chips -->
+      <div class="chip-row">
+        <template for:each={chips} for:item="chip">
+          <button key={chip.id} class="chip" data-prompt={chip.prompt}
+                  onclick={handleChip}>{chip.label}</button>
+        </template>
+      </div>
+
+      <!-- Input area -->
+      <div class="input-area">
+        <div class="input-wrap">
+          <div class="input-icon">
+            <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+          </div>
+          <textarea
+            data-id="chatInput"
+            class="chat-input"
+            placeholder="Ask about org data, SOQL, Apex, LWC, permissions…"
+            onkeydown={handleKeyDown}
+            oninput={handleInput}
+            disabled={isThinking}>
+          </textarea>
+          <button class="send-btn" onclick={sendMessage} disabled={isSendDisabled}>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+              <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2"
+                    stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">
+          <lightning-icon icon-name="utility:info" size="xx-small"></lightning-icon>
+          Queries run live against your org · Code answers via GPT-4
+        </p>
+      </div>
+
+    </div>
+    <!-- ═══ END MAIN ═══ -->
+
+  </div>
+  <!-- ═══ END agent-shell ═══ -->
+</template>

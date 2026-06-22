@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExternalServiceRegistration xmlns="http://soap.sforce.com/2006/04/metadata">
+  <description>This is auto-generated OpenAPI v3 spec for McpCreateCase.</description>
+  <label>McpCreateCase</label>
+  <schema>openapi: 3.0.0
+servers:
+  - url: /services/apexrest
+info:
+  title: McpCreateCase
+  version: 1.0.0
+  description: This is auto-generated OpenAPI v3 spec for McpCreateCase.
+paths:
+  /mcp/createCase:
+    description: Default description for the path.
+    post:
+      description: execute
+      operationId: execute
+      requestBody:
+        description: Request body for execute
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: subject
+                description:
+                  type: string
+                  description: description
+                priority:
+                  type: string
+                  description: priority
+              required:
+                - subject
+                - description
+                - priority
+              additionalProperties: false
+      responses:
+        "200":
+          description: Successful response returning CaseNumber and message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  caseNumber:
+                    type: string
+                    description: The created Case Number
+                  message:
+                    type: string
+                    description: Result message
+                required:
+                  - caseNumber
+                  - message
+                additionalProperties: false
+</schema>
+  <schemaType>OpenApi3</schemaType>
+  <schemaUploadFileExtension>yaml</schemaUploadFileExtension>
+  <schemaUploadFileName>mcpcreatecase_openapi</schemaUploadFileName>
+  <registrationProviderAsset>McpCreateCase</registrationProviderAsset>
+  <registrationProviderType>ApexRest</registrationProviderType>
+</ExternalServiceRegistration>

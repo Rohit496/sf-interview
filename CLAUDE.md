@@ -394,6 +394,23 @@ sf project deploy start -d <path>
 
 ---
 
+## LWC Patterns
+
+- Use `lwc:if` / `lwc:elseif` / `lwc:else` for conditional rendering — the legacy `if:true` / `if:false` directives are **deprecated** and emit compiler warnings at API 65.0
+- Use `ShowToastEvent` (`lightning/platformShowToastEvent`) for user-facing errors/feedback in LWC
+- Mark mutable reactive fields with `@track` when their identity matters or to guard against future object/array refactors; primitives are reactive-by-default
+- Rely on SLDS utility classes as-is (e.g. `slds-button_stretch`) instead of re-defining them in component CSS; use `slds-var-*` spacing tokens
+
+### Agentforce Conversation Client (ACC) API
+- `lightning/accApi` is a **headless** LWC module that drives the **native Agentforce side panel** — it renders no UI of its own
+- Methods (all return Promises): `open(botId?)`, `close()`, `execute(utterance, botId)`
+- Requires API 59.0+, Agentforce enabled, Lightning Experience only; supports natural-language utterances only (no direct action calls)
+- `execute()` is **fire-and-forget** — it does NOT return the agent's reply; design UX to confirm "sent", not to display a response
+- Don't hardcode the Bot Id — expose it via `@api` + `targetConfigs` so admins set it in Lightning App Builder; guard `execute()` against a blank botId
+- Reference component: `agentforcePanelLauncher` (docs/agentforce-panel-launcher.md)
+
+---
+
 ## Flow Requirements
 
 ### Record-Triggered Flows

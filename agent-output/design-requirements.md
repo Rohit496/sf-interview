@@ -1,106 +1,177 @@
-===============================================================================
-                    DESIGN REQUIREMENTS
-===============================================================================
+═══════════════════════════════════════════════════════════════════════════════
+                    📋 DESIGN REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════════
 
-TARGET: WHAT USER REQUESTED:
-Create a duplicate prevention trigger on the Account object that blocks
-insert and update of Account records when a duplicate Account Name already
-exists (case-insensitive). Follow the existing handler class pattern.
-Use API version 65.0.
+🎯 WHAT USER REQUESTED:
+Build a NEW standalone Lightning Web Component ("launcher") that uses the
+Agentforce Conversation Client (ACC) API — the headless `lightning/accApi`
+module. The component renders a small UI that drives the NATIVE Agentforce side
+panel (the module itself renders no chat UI). Required behavior:
 
--------------------------------------------------------------------------------
-                    ADMIN WORK (salesforce-admin)
--------------------------------------------------------------------------------
+- Buttons: "Open Agentforce", "Close".
+- A few preset quick-action buttons that call execute() with preset utterances.
+- An optional text input for a custom utterance, sent via execute().
+- Configurable agent/bot Id via a clean approach (@api property exposed in
+  Lightning App Builder), not hardcoded.
+- Graceful Promise/error handling (toast on failure). execute() is
+  fire-and-forget (does not return the agent reply) — design the UX around that.
+- Exposed in Lightning App Builder for record pages, home pages, and app pages
+  (targets + exposed=true in js-meta.xml).
+- API version 65.0. Suggested component name: agentforcePanelLauncher.
+
+Constraints from ACC API (informational, not implementation tasks):
+- Org must be API 59.0+, Agentforce enabled, Lightning Experience only.
+- Module: `lightning/accApi` (headless). Functions: `open(botId?)`,
+  `close()`, `execute(utterance, botId)` — all return Promises.
+- Only natural-language utterances supported; no direct action execution.
+
+EXPLICITLY OUT OF SCOPE (per user): NO Apex, NO custom objects, NO triggers.
+
+───────────────────────────────────────────────────────────────────────────────
+                    🔵 ADMIN WORK (salesforce-admin)
+───────────────────────────────────────────────────────────────────────────────
 
 No admin work required for this request.
 
-(No new fields, objects, validation rules, or declarative components were
-requested. The Account object and AccountTrigger already exist.)
+(No custom objects, fields, validation rules, permission sets, or flows were
+requested. The org-level prerequisites — Agentforce enabled, Lightning
+Experience, API 59.0+ — are environment configuration, not deliverables of this
+request, and are NOT to be created as part of this work.)
 
--------------------------------------------------------------------------------
-                    DEVELOPMENT WORK (salesforce-developer)
--------------------------------------------------------------------------------
+───────────────────────────────────────────────────────────────────────────────
+                    🟢 DEVELOPMENT WORK (salesforce-developer)
+───────────────────────────────────────────────────────────────────────────────
 
-Modify the existing AccountTriggerHandler to add duplicate Account Name
-detection logic:
+All work for this request is Development (LWC-only).
 
-  - Object: Account
-  - Trigger events: before insert, before update (trigger already exists)
-  - Duplicate detection field: Account Name (standard Name field)
-  - Matching: Case-insensitive (e.g., "Acme Corp" = "acme corp")
-  - Scope: Check against ALL existing Account records in the org
-  - On update: Exclude the current record being updated from the duplicate check
-  - Error message: "A duplicate Account with this name already exists."
-  - Behavior: Use addError() on the record to prevent save
+• Lightning Web Component: `agentforcePanelLauncher`
+  - Headless integration via the `lightning/accApi` module (import `open`,
+    `close`, `execute`).
+  - UI: "Open Agentforce" button → calls `open(botId)`.
+  - UI: "Close" button → calls `close()`.
+  - UI: a set of preset quick-action buttons, each calling
+    `execute(presetUtterance, botId)` with a hardcoded preset utterance string.
+    (Note: the SET of preset utterances is not specified by the user — see
+    OPEN ITEM below before finalizing the preset list.)
+  - UI: optional text input + a "Send" button → calls
+    `execute(typedUtterance, botId)` with the user-entered text.
+  - All three ACC calls are async/Promise-returning → use async/await or
+    `.then()/.catch()`; on rejection, surface a toast via
+    `lightning/platformShowToastEvent` (ShowToastEvent).
+  - Fire-and-forget UX: because `execute()` does NOT return the agent's reply,
+    the component must NOT attempt to display/await an agent response. Success
+    feedback should be limited to confirming the utterance was sent (e.g., a
+    brief sent/queued indication) — not the agent's answer.
 
-  Existing files to modify:
-  - force-app/main/default/classes/AccountTriggerHandler.cls
+  Configuration property:
+  • `@api botId` (String) — the target agent/bot Id, exposed in Lightning App
+    Builder via the js-meta.xml `targetConfigs` so admins set it per-placement
+    rather than hardcoding. `open()` may be called with or without it; `execute()`
+    requires it, so the component should guard against an empty `botId` before
+    calling `execute()` (e.g., disable execute buttons / show a toast if unset).
 
-  Existing trigger file (NO changes needed -- already handles before insert
-  and before update):
-  - force-app/main/default/triggers/AccountTrigger.trigger
+  Files to create (LWC bundle under force-app/main/default/lwc/agentforcePanelLauncher/):
+  • agentforcePanelLauncher.js
+  • agentforcePanelLauncher.html
+  • agentforcePanelLauncher.js-meta.xml
+  • agentforcePanelLauncher.css (optional — only if styling is needed for the
+    small launcher UI)
 
-  Implementation notes:
-  - The handler already has a validateAccounts(List<Account>, Map<Id,Account>)
-    method called in both beforeInsert and beforeUpdate -- the duplicate
-    detection logic belongs there (or in a new private method called from it).
-  - Must be bulkified: collect all Names from Trigger.new, query existing
-    Accounts in a single SOQL query, then compare.
-  - Also check for duplicates within the same batch (two records in the same
-    insert with the same Name).
-  - Use case-insensitive comparison (e.g., compare lowercased values).
-  - Use WITH USER_MODE for SOQL queries per project conventions.
-  - On update, exclude current record Ids from the SOQL results.
+  js-meta.xml specification:
+  • apiVersion: 65.0
+  • isExposed: true
+  • masterLabel: "Agentforce Panel Launcher" (label/description as desired)
+  • targets:
+      - lightning__RecordPage
+      - lightning__HomePage
+      - lightning__AppPage
+  • targetConfigs: expose the `botId` @api property (type="String",
+    label="Agent/Bot Id") for the three targets above so it is configurable in
+    Lightning App Builder.
 
--------------------------------------------------------------------------------
-                    EXECUTION ORDER
--------------------------------------------------------------------------------
+───────────────────────────────────────────────────────────────────────────────
+                    🔗 EXECUTION ORDER
+───────────────────────────────────────────────────────────────────────────────
 
-1. Developer work only -- modify AccountTriggerHandler.cls to add duplicate
-   detection logic inside the existing validateAccounts method (or a new
-   helper method called from it).
+Single deliverable — no internal dependencies. Per project workflow, since this
+is LWC-only (no Apex):
+1. salesforce-developer — build the component.
+2. salesforce-code-review — review the component.
+3. salesforce-devops + salesforce-documentation — deploy and document (parallel).
+(Skip salesforce-admin: no admin work. Skip salesforce-unit-testing: no Apex.)
 
-No dependencies on Admin work. No new metadata to create first.
+───────────────────────────────────────────────────────────────────────────────
+                    ❓ OPEN ITEM (confirm before/with build)
+───────────────────────────────────────────────────────────────────────────────
 
--------------------------------------------------------------------------------
-                    PROMPTS FOR SPECIALIST AGENTS
--------------------------------------------------------------------------------
+The user asked for "a few preset quick-action buttons" but did NOT specify the
+exact preset utterances or how many. The developer needs concrete strings to
+build them. Either:
+  (a) the user provides the specific preset button labels + utterances, OR
+  (b) the developer uses clearly-marked placeholder presets that an admin/dev
+      can edit (no business meaning assumed).
+This is the one detail not fully specified; everything else is unambiguous.
 
-PROMPT FOR salesforce-admin:
+───────────────────────────────────────────────────────────────────────────────
+                    📝 PROMPTS FOR SPECIALIST AGENTS
+───────────────────────────────────────────────────────────────────────────────
+
+🟢 PROMPT FOR salesforce-developer:
 """
-No admin work required for this request.
+Create a new headless-integration Lightning Web Component named
+`agentforcePanelLauncher` at
+force-app/main/default/lwc/agentforcePanelLauncher/.
+
+Use the Agentforce Conversation Client (ACC) API headless module
+`lightning/accApi`, importing its three Promise-returning functions:
+  - open(botId?: string): Promise<void>
+  - close(): Promise<void>
+  - execute(utterance: string, botId: string): Promise<void>
+This module routes messages to the NATIVE Agentforce side panel; it renders no
+chat UI of its own, so this component must NOT try to render a conversation or
+display the agent's reply.
+
+UI to build:
+  - "Open Agentforce" button → open(this.botId) (botId optional; if empty, ACC
+    uses the last-accessed agent).
+  - "Close" button → close().
+  - A few preset quick-action buttons, each calling execute(presetUtterance,
+    this.botId). NOTE: the exact preset utterances were NOT specified by the
+    user. Use clearly-labeled placeholder presets (e.g., utterance constants the
+    admin can edit) unless the user provides specific ones; do not invent
+    business-specific logic.
+  - An optional text input plus a "Send" button → execute(typedUtterance,
+    this.botId) with the user-entered text.
+
+Configuration:
+  - Expose `@api botId` (String) and surface it in Lightning App Builder via
+    targetConfigs. Do NOT hardcode the bot Id.
+  - execute() requires a botId — guard against an empty botId before calling
+    execute() (disable the execute/preset/send buttons or show a toast when
+    botId is unset).
+
+Async / error handling:
+  - All three ACC calls are async. Use async/await (or .then/.catch).
+  - On any rejected Promise, show an error toast using ShowToastEvent from
+    `lightning/platformShowToastEvent`.
+  - Because execute() is fire-and-forget (it does NOT return the agent reply),
+    limit success feedback to confirming the utterance was sent/queued — do NOT
+    await or display an agent response.
+
+js-meta.xml requirements:
+  - apiVersion 65.0
+  - isExposed true
+  - targets: lightning__RecordPage, lightning__HomePage, lightning__AppPage
+  - targetConfigs exposing the `botId` property (type String, friendly label)
+    for those three targets.
+
+Constraints / scope:
+  - LWC ONLY. Do NOT create any Apex, triggers, custom objects, fields, or
+    permission sets.
+  - Follow project conventions (API 65.0, force-app/main/default).
+  - Use ShowToastEvent for user-facing errors (no Apex/AuraHandledException here).
+  - Create the bundle files (.js, .html, .js-meta.xml; .css only if needed). Do
+    NOT deploy — leave deployment to the devops agent.
 """
 
-PROMPT FOR salesforce-developer:
-"""
-Modify the existing AccountTriggerHandler class to add duplicate Account
-Name prevention logic. Do NOT modify AccountTrigger.trigger -- it already
-handles before insert and before update.
-
-File to modify:
-  force-app/main/default/classes/AccountTriggerHandler.cls
-
-Requirements:
-1. Detect duplicate Account Names on before insert and before update.
-2. Matching must be case-insensitive ("Acme Corp" matches "acme corp").
-3. Check against ALL existing Account records in the org.
-4. On update, exclude the current record's Id from the duplicate check
-   so renaming an Account to its own current name does not trigger a false
-   positive.
-5. Also detect duplicates within the same trigger batch (e.g., two records
-   in one insert with the same Name).
-6. When a duplicate is found, call addError() on the record with the
-   message: "A duplicate Account with this name already exists."
-7. The logic should be bulkified -- collect all Names, run one SOQL query,
-   then iterate.
-8. Use WITH USER_MODE for the SOQL query.
-9. The existing validateAccounts method is called in both beforeInsert and
-   beforeUpdate. Add the duplicate logic there or in a new private helper
-   method called from validateAccounts.
-10. Follow existing code patterns: with sharing, named constants for error
-    messages, Database methods where applicable, API version 65.0.
-11. Do not add validation rules, permission sets, test classes, or any
-    work not listed above.
-"""
-
-===============================================================================
+═══════════════════════════════════════════════════════════════════════════════

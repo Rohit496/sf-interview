@@ -39,3 +39,12 @@
 ## Multi-Feature Projects
 - When a project has multiple features, create one doc per feature plus a docs/README.md index
 - README.md should include: full component inventory table, shared conventions table, architecture overview diagram, permission set assignment guide, and known project-wide limitations
+
+## Headless / Platform API LWC Pattern
+- agentforcePanelLauncher uses lightning/accApi (Agentforce Conversation Client) -- headless module, no chat UI rendered
+- ACC API: open(botId?), close(), execute(utterance, botId) -- all Promise<void>, all fire-and-forget
+- execute() does NOT return agent reply; component only confirms utterance was sent
+- botId: @api property exposed in Lightning App Builder via targetConfigs; never hardcoded
+- isBusy flag: set before ACC call, cleared in finally block; disables all controls while in flight
+- PRESET_UTTERANCES constant array: edit to change/add/remove preset buttons; template iterates dynamically
+- When documenting headless API LWCs: include a dedicated API Reference section explaining the external module, its methods, and constraints before the component detail sections
